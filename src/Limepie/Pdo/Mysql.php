@@ -30,8 +30,8 @@ class Mysql extends \Pdo
     public function gets($statement, $bindParameters = [], $mode = \PDO::FETCH_ASSOC)
     {
         try {
-            //pr($statement, $bindParameters, $mode = \PDO::FETCH_ASSOC);
-//            return parent::fetchAll($statement, $mode, $bindParameters) ?: null;
+            //pr($statement, $bindParameters);
+            // return parent::fetchAll($statement, $mode, $bindParameters) ?: null;
             //$start    = \limepie\toolkit::timer(__FILE__, __LINE__);
             $stmt   = self::execute($statement, $bindParameters);
             $mode   = self::getMode($mode);
@@ -56,6 +56,7 @@ class Mysql extends \Pdo
     public function get($statement, $bindParameters = [], $mode = \PDO::FETCH_ASSOC)
     {
         try {
+            //pr($statement, $bindParameters);
 //            return parent::fetchOne($statement, $mode, $bindParameters) ?: null;
             //$start    = \limepie\toolkit::timer(__FILE__, __LINE__);
             $stmt   = self::execute($statement, $bindParameters);
@@ -303,6 +304,7 @@ class Mysql extends \Pdo
                 $binds[$key] = $value;
             }
         }
+
         $result = $stmt->execute($binds);
 
         if (true === $ret) {

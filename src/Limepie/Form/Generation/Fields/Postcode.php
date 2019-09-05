@@ -41,7 +41,7 @@ class Postcode extends \Limepie\Form\Generation\Fields
             </div>
             <input type="text" class="form-control" readonly="readonly" value="{$zoncode}" id="{$id}_postcode" placeholder="" />
             <span class="btn-group input-group-btn">
-                <button class="btn btn-primary" type="button" onclick="{$id}_execDaumPostcode()"><span data-feather="search"></span></button>
+                <button class="btn btn-postcode" type="button" onclick="{$id}_execDaumPostcode()"><span data-feather="search"></span></button>
             </span>
         </div>
 

@@ -41,7 +41,12 @@ class Group extends \Limepie\Form\Generation\Fields
             $dotKey = \str_replace(['[', ']'], ['.', ''], $propertyName);
             // pr(static::$reverseConditions, $dotKey);
             // pr( ?? '');
-            $aData = $data[$fixPropertyKey] ?? '';
+
+            $aData = '';
+
+            if(true === is_array($data) && $fixPropertyKey) {
+                $aData = $data[$fixPropertyKey] ?? '';
+            }
 
             $isMultiple = true === isset($propertyValue['multiple']) ? true : false;
             $isCollapse = true === isset($propertyValue['collapse']) ? true : false;
@@ -94,7 +99,15 @@ class Group extends \Limepie\Form\Generation\Fields
                         $parentId
                     );
                 } else {
-                    $aData = $propertyValue['default'] ?? ['' => ''];
+                    if(true === isset($propertyValue['default'])) {
+                        if(true === is_array($propertyValue['default'])) {
+                            $aData = $propertyValue['default'];
+                        } else {
+                            $aData = [$propertyValue['default']];
+                        }
+                    } else {
+                        $aData = ['' => ''];
+                    }
 
                     foreach ($aData as $aKey => $aValue) {
                         $index++;
@@ -132,25 +145,30 @@ class Group extends \Limepie\Form\Generation\Fields
                 }
             }
 
+
+            $title = '';
             if (true === isset($propertyValue['label'])) {
-                if (true === isset($propertyValue['label'][static::getLanguage()])) {
-                    $title = $propertyValue['label'][static::getLanguage()];
+                if (true === \is_array($propertyValue['label'])) {
+                    if (true === isset($propertyValue['label'][static::getLanguage()])) {
+                        $title = $propertyValue['label'][static::getLanguage()];
+                    }
                 } else {
                     $title = $propertyValue['label'];
                 }
-            } else {
-                $title = '';
             }
 
+            $description = '';
             if (true === isset($propertyValue['description'])) {
-                if (true === isset($propertyValue['description'][static::getLanguage()])) {
-                    $description = $propertyValue['description'][static::getLanguage()];
+                if (true === \is_array($propertyValue['description'])) {
+                    if (true === isset($propertyValue['description'][static::getLanguage()])) {
+                        $description = $propertyValue['description'][static::getLanguage()];
+                    }
                 } else {
                     $description = $propertyValue['description'];
                 }
-            } else {
-                $description = '';
             }
+
+
             $collapse = '';
 
             if (true === isset($propertyValue['collapse'])) {
@@ -213,12 +231,12 @@ class Group extends \Limepie\Form\Generation\Fields
                 }
             }
 
-            $addClass = 'row';
+            $addClass = '';
 
             if (true === isset($propertyValue['class'])) {
                 $addClass = ' ' . $propertyValue['class'];
             } else {
-                $addClass = ' row';
+                $addClass = ' ';
             }
 
             if (true === isset($propertyValue['class_condition'])) {
@@ -348,6 +366,7 @@ EOT;
                 if ($description) {
                     $d = '<p class="description">' . $description . '</p>';
                 }
+
                 $innerhtml .= <<<EOT
                 <div class="wrap-form-group{$addClass}" name="{$dotKey}.layer">
                     <div class="checkbox{$addClass2}">
@@ -481,7 +500,7 @@ EOT;
             } else {
                 $innerhtml .= <<<EOT
                 {$titleHtml}
-                <div class="form-group row">
+                <div class="form-group">
                     {$elements}
                 </div>
 EOT;

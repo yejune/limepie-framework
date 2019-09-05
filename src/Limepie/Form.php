@@ -31,9 +31,9 @@ class Form
         }
     }
 
-    public function validation(array $data = [])
+    public function validation(array $data = [], $language = '')
     {
-        $this->validation                    = new \Limepie\Form\Validation($data);
+        $this->validation                    = new \Limepie\Form\Validation($data, $language);
         $this->validation->reverseConditions = $this->reverseConditions;
 
         return $this->validation->validate($this->spec, $data);

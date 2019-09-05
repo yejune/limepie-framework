@@ -27,14 +27,15 @@ class Exception extends \Exception
         }
     }
 
-    public function __toString()
+    public function x__toString()
     {
-        if (false !== \strpos($this->getFile(), 'resource/Framework/Limepie')) {
+        //pr($this);
+       // if (false === \strpos($this->getFile(), '/limepie-framework/src/')) {
             $traces = $this->getTraces();
-
+//pr($traces);
             foreach ($traces as $trace) {
                 if (true === isset($trace['file'])) {
-                    if (false === \strpos($trace['file'], 'resource/Framework/Limepie')) {
+                    if (false === \strpos($trace['file'], '/limepie-framework/src/')) {
                         $filename = $trace['file'];
                         $line     = $trace['line'];
 
@@ -52,26 +53,26 @@ class Exception extends \Exception
                     }
                 }
             }
-        } else {
-            $filename = $this->file;
-            $line     = $this->line;
+        // } else {
+        //     $filename = $this->file;
+        //     $line     = $this->line;
 
-            if (true === \Limepie\is_cli()) {
-                $message = "{$this->code}: {$this->message} in {$filename} on line {$line}";
-            } elseif (true === \Limepie\is_ajax()) {
-                $message = \json_encode([
-                    'message' => "{$this->code}: {$this->message} in {$filename} on line {$line}",
-                ], \JSON_UNESCAPED_UNICODE);
-            } else {
-                $message = "{$this->code}: {$this->message} in <b>{$filename}</b> on line <b>{$line}</b>\n\n";
-            }
-        }
+        //     if (true === \Limepie\is_cli()) {
+        //         $message = "{$this->code}: {$this->message} in {$filename} on line {$line}";
+        //     } elseif (true === \Limepie\is_ajax()) {
+        //         $message = \json_encode([
+        //             'message' => "{$this->code}: {$this->message} in {$filename} on line {$line}",
+        //         ], \JSON_UNESCAPED_UNICODE);
+        //     } else {
+        //         $message = "{$this->code}: {$this->message} in <b>{$filename}</b> on line <b>{$line}</b>\n\n";
+        //     }
+        // }
         //\pr($this->getTraces());
 
-        echo $message;
-        \pr($this->getTraces());
+        return $message;
+        // \pr($this->getTraces());
 
-        exit;
+        // exit;
 
         return '';
     }

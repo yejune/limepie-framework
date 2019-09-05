@@ -17,6 +17,13 @@ EOT;
         $html = '';
 
         foreach ($property['items'] as $radioValue => $radioText) {
+
+            if(true === is_array($radioText)) {
+                if(true === isset($radioText[\Limepie\get_language()])) {
+                    $radioText = $radioText[\Limepie\get_language()];
+                }
+            }
+
             $checked = $radioValue === $value ? 'checked="checked"' : '';
 
             $html .= <<<EOT

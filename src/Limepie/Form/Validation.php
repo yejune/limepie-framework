@@ -6,6 +6,8 @@ class Validation
 {
     public static $methods = [];
 
+    public $language = 'ko';
+
     public $throwException = false;
 
     public $data = [];
@@ -32,11 +34,18 @@ class Validation
         'step'        => 'Please enter a multiple of {0}.',
         'unique'      => 'unique',
         'accept'      => 'Please enter a value with a valid mimetype.',
+        'in'          => 'Not a allowed value'
     ];
 
-    public function __construct($data = [])
+    public function __construct($data = [], $language = '')
     {
         $this->data = $data;
+
+        if ($language) {
+            $this->language = $language;
+        } else {
+            $this->language = \Limepie\get_language();
+        }
     }
 
     public static function addMethod($name, $callback)
@@ -258,7 +267,7 @@ class Validation
         // }
         //\pr($name, $property, $value);
         $messages = $property['messages'] ?? [];
-        $language = 'ko';
+        $language = $this->language;
         //\pr($property);
 
         if (true === isset($property['rules'])) {
@@ -269,7 +278,9 @@ class Validation
                     if ($callback($value, $name, $ruleParam)) {
                         //\pr($ruleName, $value, $name, $ruleParam);
                     } else {
-                        if ($messages[$ruleName] ?? false) {
+                        if ($messages[$ruleName][$language] ?? false) {
+                            $message = $messages[$ruleName][$language];
+                        } elseif ($messages[$ruleName] ?? false) {
                             $message = $messages[$ruleName];
                         } elseif ($messages[$language][$ruleName] ?? false) {
                             $message = $messages[$language][$ruleName];
@@ -370,6 +381,12 @@ Validation::addMethod('max', function($value, $name, $param) {
 
 Validation::addMethod('range', function($value, $name, $param) {
     return $this->optional($value) || $value >= $param[0] && $value <= $param[1];
+});
+
+Validation::addMethod('in', function($value, $name, $param) {
+    $enum = \Limepie\array_value_flatten($param);
+
+    return $this->optional($value) || in_array($value, $enum, false) !== false;
 });
 
 // required일때 동작

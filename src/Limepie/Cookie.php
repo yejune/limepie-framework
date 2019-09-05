@@ -5,7 +5,9 @@ namespace Limepie;
 class Cookie
 {
     public static $domain = '';
+
     public static $keyStores = [];
+
     //private static $cookie = [];
 
     public function __construct($option = [])
@@ -39,7 +41,7 @@ class Cookie
     {
         $_value = Encrypt::pack($value);
 
-        if (self::_set($key, $_value, $expire, $path, $domain, $secure, $httpOnly)) {
+        if (self::setRaw($key, $_value, $expire, $path, $domain, $secure, $httpOnly)) {
             return $_value;
         }
 
@@ -48,7 +50,7 @@ class Cookie
 
     public static function get($key, $check = false)
     {
-        return self::_get($key) ? Encrypt::unpack(self::_get($key)) : null;
+        return self::isCookie($key) ? Encrypt::unpack(self::getRaw($key)) : null;
     }
 
     public static function remove($key, $value = '', $expire = 0, $path = '/', $domain = null, $secure = true, $httpOnly = true)
@@ -56,7 +58,7 @@ class Cookie
         return self::_destroy($key, $value, $expire, $path, $domain, $secure, $httpOnly);
     }
 
-    private static function _set($key, $value, $expire = 0, $path = '/', $domain = null, $secure = true, $httpOnly = true)
+    public static function setRaw($key, $value, $expire = 0, $path = '/', $domain = null, $secure = true, $httpOnly = true)
     {
         $key    = self::_sethost($key);
         $domain = true === (null === $domain) ? self::$domain : $domain;
@@ -74,11 +76,16 @@ class Cookie
         return \setcookie($key, $value, $expire, $path, $domain, $secure, $httpOnly);
     }
 
-    private static function _get($key)
+    public static function isCookie($key)
+    {
+        return true === isset($_COOKIE[$key]);
+    }
+
+    public static function getRaw($key)
     {
         $key = self::_sethost($key);
 
-        return true === isset($_COOKIE[$key]) ? $_COOKIE[$key] : false;
+        return $_COOKIE[$key] ?? false;
     }
 
     private static function _destroy($key, $value = '', $expire = 0, $path = '/', $domain = null, $secure = true, $httpOnly = true)
@@ -98,8 +105,6 @@ class Cookie
 
     private static function _sethost($key)
     {
-        //$key = \str_replace('.', '_', $_SERVER['HTTP_HOST']) . '_' . $key;
-
         return $key;
     }
 }

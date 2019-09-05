@@ -5,7 +5,7 @@ namespace Limepie\Sso;
 /**
  * Single sign-on broker.
  *
- * @ ()https://github.com/legalthings/sso
+ * @see https://github.com/legalthings/sso
  *
  * The broker lives on the website visited by the user. The broken doesn't have any user credentials stored. Instead it
  * will talk to the SSO server in name of the user, verifying credentials and getting user information.
@@ -161,7 +161,7 @@ class Broker
      */
     public function isAttached()
     {
-        return isset($this->token);
+        return isset($this->token) && $this->token;
     }
 
     /**
@@ -202,8 +202,11 @@ class Broker
         }
         $params = ['return_url' => $returnUrl];
         $url    = $this->getAttachUrl($params);
+        //$url = str_replace('//', '//test:test@', $url);
 
-        \header("Location: ${url}", true, 307);
+        \header('Cache-Control: no-store, no-cache, must-revalidate, post-check=0, pre-check=0');
+        \header('Expires: Sat, 26 Jul 1997 05:00:00 GMT');
+        \header("Location: ${url}#+", true, 307);
         echo "You're redirected to <a href='${url}'>${url}</a>";
 
         exit();
@@ -237,11 +240,11 @@ class Broker
      */
     public function login($username = null, $password = null)
     {
-        if (!isset($username) && isset($_POST['email'])) {
+        if (false === isset($username) && isset($_POST['email'])) {
             $username = $_POST['email'];
         }
 
-        if (!isset($password) && isset($_POST['password'])) {
+        if (false === isset($password) && isset($_POST['password'])) {
             $password = $_POST['password'];
         }
         //pr($username, $password);
@@ -274,7 +277,7 @@ class Broker
      */
     public function getUserInfo()
     {
-        if (!isset($this->userinfo)) {
+        if (false === isset($this->userinfo)) {
             $this->userinfo = $this->request('GET', 'userInfo');
         }
 
@@ -301,7 +304,7 @@ class Broker
      */
     protected function getSessionId()
     {
-        if (!isset($this->token)) {
+        if (false === isset($this->token)) {
             return null;
         }
         $checksum = \hash('sha256', 'session' . $this->token . $this->secret);
@@ -346,6 +349,8 @@ class Broker
         //\curl_setopt($ch, \CURLOPT_FOLLOWLOCATION, true);
         //\curl_setopt($ch, \CURLOPT_HEADER, 1); //헤더를 포함한다.
 
+        //\pr($url, ['Accept: application/json', 'Authorization: Bearer ' . $this->getSessionID()]);
+
         if ('POST' === $method && !empty($data)) {
             $post = \is_string($data) ? $data : \http_build_query($data);
             \curl_setopt($ch, \CURLOPT_POSTFIELDS, $post);
@@ -354,10 +359,11 @@ class Broker
         //pr($url, $post ?? $data, 'Authorization: Bearer ' . $this->getSessionID());
 
         $response = \curl_exec($ch);
-        // pr($curl_result);
+        //pr($response);
         // $split_result = \explode("\r\n\r\n", $curl_result, 2);
         // $header       = $split_result[0];
         // $response     = $split_result[1];
+        //\pr($response);
 
         if (0 !== \curl_errno($ch)) {
             $message = 'Server request failed: ' . \curl_error($ch);
@@ -366,9 +372,10 @@ class Broker
         }
         $httpCode      = \curl_getinfo($ch, \CURLINFO_HTTP_CODE);
         [$contentType] = \explode(';', \curl_getinfo($ch, \CURLINFO_CONTENT_TYPE));
-
+        //pr($contentType);
         if ('application/json' !== $contentType) {
             $message = 'Expected application/json response, got ' . $contentType;
+            //\pr($response);
 
             throw new Exception($message);
         }

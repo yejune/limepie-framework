@@ -20,9 +20,8 @@ class Div extends \Limepie\Form\Generation\Fields
         }
 
         $html = <<<EOT
-        <div class="${elementClass}"></div>
-
-EOT;
+            <div class="${elementClass}"></div>
+        EOT;
 
         return $html;
     }
@@ -31,9 +30,8 @@ EOT;
     {
         $value = (string) $value;
         $html  = <<<EOT
-        {$value}
-
-EOT;
+            {$value}
+        EOT;
 
         return $html;
     }

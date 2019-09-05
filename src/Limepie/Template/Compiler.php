@@ -149,7 +149,7 @@ class Compiler
             \fclose($fpTpl);
         }
 
-        if (\trim($this->prefilter)) {
+        if (\trim((string)$this->prefilter)) {
             $source = $this->filter($source, 'pre');
         }
 
@@ -254,7 +254,7 @@ class Compiler
         $statement = \trim($statement);
 
         $match = [];
-        \preg_match('/^(\\\\*)\s*(:\?|\/@|\/\?|[=#@?:\/+])?(.*)$/s', $statement, $match);
+        \preg_match('/^(\\\\*)\s*(:\?|\?#|:\?#|\/@|\/\?|[=#@?:\/+\*])?(.*)$/s', $statement, $match);
 
         if ($match[1]) {
             // escape
@@ -268,12 +268,26 @@ class Compiler
                     $result        = [2, $this->compileLoop($statement, $line)];
 
                     break;
+                case '?#':
+                    $this->brace[] = ['if', $line];
+                    $this->brace[] = ['if', $line];
+
+                    if (1 === \preg_match('`^\?#([\s+])?([a-zA-Z0-9\-_\.]+)$`', $statement)) {
+                        $result = [2, $this->compileIfDefine($statement, $line)];
+                    } else {
+                        $result = [1, $statement];
+                    }
+                    break;
                 case '#':
                     if (1 === \preg_match('`^#([\s+])?([a-zA-Z0-9\-_\.]+)$`', $statement)) {
                         $result = [2, $this->compileDefine($statement, $line)];
                     } else {
                         $result = [1, $statement];
                     }
+
+                    break;
+                case '*':
+                    $result = [2, '/*'.$statement.'*/'];
 
                     break;
                 case ':':
@@ -284,6 +298,12 @@ class Compiler
                     $result = [2, $this->compileElse($statement, $line)];
 
                     break;
+                case '*':
+
+                    $result = [2, '/*'.$statement.'*/'];
+
+                    break;
+
                 case '/':
                     if (0 === \strpos($match[3], '/')) {
                         $result = [1, $org];
@@ -357,6 +377,10 @@ class Compiler
         return "self::printContents('" . \trim(\substr($statement, 1)) . "')";
     }
 
+    public function compileIfDefine($statement, $line)
+    {
+        return "if(self::defined('" . \trim(\substr($statement, 2)) . "')) {{";
+    }
     /**
      * @param  $statement
      * @param  $line
@@ -643,7 +667,7 @@ class Compiler
                         $xpr .= $current['value'];
                     } elseif ('string_concat' === $prev['name']) {
                         if (true === \in_array($current['value'], ['index_', 'key_', 'value_', 'last_', 'size_'], true)) {
-                            if (\strrpos($xpr, ']')) {
+                            if (0 === \strrpos($xpr, ']')) {
                                 $xpr .= '[\'' . $current['value'] . '\']';
                             } else {
                                 $xpr .= '_' . $current['value'] . '';
@@ -855,7 +879,7 @@ class Compiler
 
                     break;
                 case 'operator':
-                    if (false === \in_array($prev['name'], ['', 'right_parenthesis', 'right_bracket', 'number', 'string', 'string_number', 'quote', 'assign', 'comma', 'sam', 'sam2', 'left_parenthesis'], true)) {
+                    if (false === \in_array($prev['name'], ['', 'compare', 'right_parenthesis', 'right_bracket', 'number', 'string', 'string_number', 'quote', 'assign', 'comma', 'sam', 'sam2', 'left_parenthesis'], true)) {
                         if (true === $this->debug) {
                             \pr($xpr, $prev, $current, __LINE__);
                         }

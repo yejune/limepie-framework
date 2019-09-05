@@ -2,14 +2,19 @@
 
 namespace Limepie;
 
+function _($string)
+{
+    return \dgettext('system', $string);
+}
 function __($domain, $string)
 {
-    return dgettext($domain, $string);
+    return \dgettext($domain, $string);
 }
-function ___($domain, $string, $a ,$b)
+function ___($domain, $string, $a, $b)
 {
-    return dngettext($domain, $string, $a ,$b);
+    return \dngettext($domain, $string, $a, $b);
 }
+
 /**
  * debug용 print_r
  *
@@ -282,6 +287,25 @@ function refparse($arr = [], $basepath = '') : array
             $return = \array_merge($return, $yml);
         } elseif (true === \is_array($value)) {
             $return[$key] = \Limepie\refparse($value, $basepath);
+
+            if (true === isset($value['lang'])) {
+                $default = $value;
+                unset($default['lang']);
+                $default2                      = $default;
+                $default2['rules']['required'] = false;
+
+                $value = [
+                    'label'      => $value['label'],
+                    'type'       => 'group',
+                    'properties' => [
+                        'ko' => ['label' => \__('core', '한국어'), 'prepend' => '<i class="flag-icon flag-icon-kr"></i>'] + $default2,
+                        'en' => ['label' => \__('core', '영어'), 'prepend' => '<i class="flag-icon flag-icon-us"></i>'] + $default2,
+                        'zh' => ['label' => \__('core', '중국어'), 'prepend' => '<i class="flag-icon flag-icon-cn"></i>'] + $default2,
+                        'ja' => ['label' => \__('core', '일본어'), 'prepend' => '<i class="flag-icon flag-icon-jp"></i>'] + $default2,
+                    ],
+                ];
+                $return[$key . '_langs'] = \Limepie\refparse($value, $basepath);
+            }
         } else {
             $return[$key] = $value;
         }
@@ -308,7 +332,7 @@ function refparse($arr = [], $basepath = '') : array
     return $return;
 }
 
-function yml_parse_file($file)
+function yml_parse_file($file, \Closure $callback = null)
 {
     $filepath = \Limepie\stream_resolve_include_path($file);
 
@@ -316,7 +340,12 @@ function yml_parse_file($file)
         $basepath = \dirname($filepath);
         $spec     = \yaml_parse_file($filepath);
 
-        return \Limepie\refparse($spec, $basepath);
+        $data = \Limepie\refparse($spec, $basepath);
+
+        if(true === isset($callback) && $callback) {
+            return $callback($data);
+        }
+        return $data;
     }
 
     throw new \Limepie\Exception('"' . $file . '" file not found');
@@ -346,6 +375,43 @@ function array_merge_recursive_distinct(array $array1, array $array2) : array
     }
 
     return $merged;
+}
+
+function array_key_flatten($array) {
+    if(!isset($keys) || !is_array($keys)) {
+        $keys = array();
+    }
+    foreach($array as $key => $value) {
+        $keys[] = $key;
+        if(is_array($value)) {
+            $keys = array_merge($keys,\Limepie\array_key_flatten($value));
+        }
+    }
+    return $keys;
+}
+function array_value_flatten($array) {
+    if(!isset($values) || !is_array($values)) {
+        $values = array();
+    }
+    foreach($array as $key => $value) {
+        if(is_array($value)) {
+            $values = array_merge($values,\Limepie\array_values_flatten($value));
+        } else {
+            $values[] = $value;
+        }
+    }
+    return $values;
+}
+
+function array_flattenx($items)
+{
+    if (! is_array($items)) {
+        return [$items];
+    }
+
+    return array_reduce($items, function ($carry, $item) {
+        return array_merge($carry, array_flatten($item));
+    }, []);
 }
 
 function array_mix(array $a, array $b) : array
@@ -499,6 +565,10 @@ function is_file_array($array = [], $isMulti = false) : bool
 
 function get_language() : string
 {
+    $locale = \Limepie\Cookie::get(\Limepie\Cookie::getKeyStore('locale'));
+
+    return \explode('_', $locale)[0];
+
     return $_COOKIE['client-language'] ?? 'ko';
 }
 
@@ -633,7 +703,7 @@ function genRandomString($length = 5)
     $char .= '23456789';
     $result = '';
     for ($i = 0; $i < $length; $i++) {
-        $result .= $char[\mt_rand(0, \strlen($char)-1)];
+        $result .= $char[\mt_rand(0, \strlen($char) - 1)];
     }
 
     return $result;
@@ -655,10 +725,43 @@ function camelize($word)
     return \preg_replace_callback(
       '/(^|_|-)([a-zA-Z]+)/',
       function($m) {
-          return ucfirst( \strtolower("{$m[2]}") );
+          return \ucfirst(\strtolower("{$m[2]}"));
       },
       $word
   );
+}
+
+function array_extract($arrays, $key, $index = null)
+{
+    $return = [];
+
+    foreach ($arrays as $i => $value) {
+        if(true === isset($index)) {
+            if(true === is_array($index)) {
+                $tmp = $value;
+                foreach($index as $k1) {
+                    $tmp = $tmp[$k1];
+                }
+                $i1 = $tmp;
+            } else {
+                $i1 = $index;
+            }
+        } else {
+            $i1 = $i;
+        }
+        if(true === is_array($key)) {
+            $tmp = $value;
+            foreach($key as $k1) {
+                $tmp = $tmp[$k1];
+            }
+            $return[$i1] = $tmp;
+
+        } else {
+            $return[$i1] = $value[$key];
+        }
+    }
+
+    return $return;
 }
 
 function file_array_flatten($list, $prefix = '')
@@ -819,16 +922,20 @@ function decimal($number) : float
 function number_format($number)
 {
     //$stripzero = sprintf('%g',$number);
-    $parts  = \explode('.', $number);
-    $result = \number_format((int) $parts[0]);
+    if (0 < \strlen((string) $number)) {
+        $parts  = \explode('.', $number);
+        $result = \number_format((int) $parts[0]);
 
-    if (true === isset($parts[1])) {
-        if ($r = \rtrim($parts[1], '0')) {
-            $result .= '.' . $r;
+        if (true === isset($parts[1])) {
+            if ($r = \rtrim($parts[1], '0')) {
+                $result .= '.' . $r;
+            }
         }
+
+        return $result;
     }
 
-    return $result;
+    return 0;
 }
 function array_insert(&$array, $position, $insert)
 {

@@ -134,16 +134,86 @@ EOD;
         $option = '';
 
         if (true === isset($property['items'])) {
-            foreach ($property['items'] as $itemValue => $itemText) {
-                $itemValue = \htmlspecialchars((string) $itemValue);
+            if($property['items'] instanceof \Resource\Helper\Menu) {
+                $option = '<option value="">select..</option>';
+                // storage of output
 
-                if (\is_array($itemText)) {
-                    $option .= '<optgroup label="' . $itemValue . '">';
+                try {
+                    $output = new \ArrayIterator();
+                    // create the caching iterator of the nav array
+                    $its = new \RecursiveIteratorIterator(
+                        new \Limepie\RecursiveIterator\AdjacencyList($property['items']->menu),
+                        \RecursiveIteratorIterator::SELF_FIRST
+                    );
 
-                    foreach ($itemText as $subItemValue => $subItemText) {
-                        if ((string) $value === (string) $subItemValue) {
-                            $option .= '<option value="' . $subItemValue . '" selected="selected"' . $disabled . '>' . $itemValue . ' > ' . $subItemText . '</option>';
+                    // child flag
+                    $depth = 0;
+
+                    // generate the nav
+                    foreach ($its as $it) {
+
+                        // set the current depth
+                        $curDepth = $its->getDepth();
+
+                        // store the difference in depths
+                        $diff = abs($curDepth - $depth);
+                        // close previous nested levels
+                        if ($curDepth < $depth) {
+                            $output->append(str_repeat('</optgroup>', $diff));
+                        }
+
+
+                        $depth = $its->getDepth();
+
+                        $path = [];
+                        for ($depth = $its->getDepth(); $depth && $depth--;) {
+                            \array_unshift($path, $its->getSubIterator($depth)->current()['name']);
+                        }
+
+                        $path[] = $it['name'];
+
+                        // check if we have the last nav item
+
+                        // either add a subnav or close the optionst item
+                        if ($its->hasChildren()) {
+                            $output->append('<optgroup label="'.\str_repeat("&nbsp;", ($curDepth) * 4).$it['name'].'">');
                         } else {
+                            $selected = '';
+                            if((string) $value === (string) $it['params']['seq']) {
+                                $selected = " selected='selected'";
+                            }
+                            $space = '';
+                            if($curDepth > 0) {
+                                $space = \str_repeat("&nbsp;", ($curDepth-1) * 4);
+                            }
+                            $output->append('<option value="'.$it['params']['seq'].'" '.$selected.'>' . $space. implode(' > ', $path) . '</option>');
+                        }
+
+                        // cache the depth
+                        $depth = $curDepth;
+                    }
+
+                    // if we have values, output the unordered list
+                    if ($output->count()) {
+                        $option .= implode("\n", (array) $output);
+                    }
+
+                } catch (\Exception $e) {
+                    die($e->getMessage());
+                }
+            } else {
+                foreach ($property['items'] as $itemValue => $itemText) {
+                    if (true === \is_array($itemText)) {
+                        if (true === isset($itemText[\Limepie\get_language()])) {
+                            $itemText = $itemText[\Limepie\get_language()];
+                        }
+                    }
+                    $itemValue = \htmlspecialchars((string) $itemValue);
+
+                    if (true === \is_array($itemText)) {
+                        $option .= '<optgroup label="' . $itemValue . '">';
+
+                        foreach ($itemText as $subItemValue => $subItemText) {
                             $disabled2 = '';
 
                             if (true === \in_array($subItemValue, $disables, false)) {
@@ -151,13 +221,14 @@ EOD;
                             } else {
                                 $disabled2 = $disabled;
                             }
-                            $option .= '<option value="' . $subItemValue . '" ' . $disabled2 . '>' . $itemValue . ' > ' . $subItemText . '</option>';
+
+                            if ((string) $value === (string) $subItemValue) {
+                                $option .= '<option value="' . $subItemValue . '" selected="selected"' . $disabled2 . '>' . $itemValue . ' > ' . $subItemText . '</option>';
+                            } else {
+                                $option .= '<option value="' . $subItemValue . '" ' . $disabled2 . '>' . $itemValue . ' > ' . $subItemText . '</option>';
+                            }
                         }
-                    }
-                    $option .= '</optgroup>';
-                } else {
-                    if ((string) $value === (string) $itemValue) {
-                        $option .= '<option value="' . $itemValue . '" selected="selected"' . $disabled . '>' . $itemText . '</option>';
+                        $option .= '</optgroup>';
                     } else {
                         $disabled2 = '';
 
@@ -166,7 +237,12 @@ EOD;
                         } else {
                             $disabled2 = $disabled;
                         }
-                        $option .= '<option value="' . $itemValue . '" ' . $disabled2 . '>' . $itemText . '</option>';
+
+                        if ((string) $value === (string) $itemValue) {
+                            $option .= '<option value="' . $itemValue . '" selected="selected"' . $disabled2 . '>' . $itemText . '</option>';
+                        } else {
+                            $option .= '<option value="' . $itemValue . '" ' . $disabled2 . '>' . $itemText . '</option>';
+                        }
                     }
                 }
             }

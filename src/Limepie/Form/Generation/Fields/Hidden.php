@@ -13,6 +13,11 @@ class Hidden extends \Limepie\Form\Generation\Fields
         }
         $default = $property['default'] ?? '';
 
+        if (0 === \strlen($value)) {
+            if (true === isset($property['uuid']) && true === $property['uuid']) {
+                $value = \Limepie\uuid();
+            }
+        }
         $html = <<<EOT
     <input type="hidden" class="form-control" readonly="readonly" name="{$key}" value="{$value}" data-default="{$default}" />
 EOT;

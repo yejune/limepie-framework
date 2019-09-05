@@ -35,6 +35,12 @@ class Choice extends \Limepie\Form\Generation\Fields
             $buttonClass = ' ' . $property['button_class'];
         }
 
+        $elementClass = '';
+
+        if (true === isset($property['element_class'])) {
+            $elementClass = ' ' . $property['element_class'];
+        }
+
         $readonly = '';
 
         if (true === isset($property['readonly'])) {
@@ -46,10 +52,15 @@ class Choice extends \Limepie\Form\Generation\Fields
 
         if (true === isset($property['items']) && true === \is_array($property['items'])) {
             foreach ($property['items'] as $k1 => $v1) {
+                if(true === is_array($v1)) {
+                    if(true === isset($v1[\Limepie\get_language()])) {
+                        $v1 = $v1[\Limepie\get_language()];
+                    }
+                }
                 $checked = (string) $value === (string) $k1 ? 'checked' : '';
                 $active  = (string) $value === (string) $k1 ? 'active' : '';
                 $buttons .= <<<EOD
-<label class="btn btn-switch {$active}">
+<label class="btn btn-switch {$active} {$elementClass}">
 <input type="radio" name="{$key}" autocomplete="off" value="{$k1}" {$checked} ${onchange}> {$v1}
 </label>
 

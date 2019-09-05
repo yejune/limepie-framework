@@ -26,11 +26,11 @@ class Pagination
         $urlPattern = '',
         $viewStartEnd = false
     ) {
-        $this->totalCount     = $totalCount;
-        $this->recordsPerPage = $recordsPerPage;
-        $this->currentPage    = $currentPage;
+        $this->totalCount     = (int) $totalCount;
+        $this->recordsPerPage = (int) $recordsPerPage;
+        $this->currentPage    = (int) $currentPage;
         $this->urlPattern     = $urlPattern;
-        $this->pagesPerBlock  = $pagesPerBlock;
+        $this->pagesPerBlock  = (int) $pagesPerBlock;
         $this->viewStartEnd   = $viewStartEnd;
 
         $this->totalPages = (0 === $this->recordsPerPage ? 0 : (int) \ceil($this->totalCount / $this->recordsPerPage));

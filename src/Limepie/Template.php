@@ -32,7 +32,8 @@ class Template
     /**
      * @var array
      */
-    public $var_ = [];
+   //public $var_ = [];
+    public $var_=array(''=>array());
 
     /**
      * @var string
@@ -78,6 +79,8 @@ class Template
 
     public $pluginExtension = 'php';
 
+    public $_current_scope = '';
+
     public function __construct()
     {
     }
@@ -92,31 +95,27 @@ class Template
      * @param $key
      * @param $value
      */
-    public function assign($key, $value = false)
+    public function assign($arg)
     {
-        if (true === \is_array($key)) {
-            $this->var_ = \array_merge($this->var_, $key);
-        } else {
-            $this->var_[$key] = $value;
+        if (is_array($arg))
+        {
+            $var = array_merge($var=&$this->var_[$this->_current_scope], $arg);
+        }
+        else
+        {
+            $this->var_[$this->_current_scope][$arg] = func_get_arg(1);
         }
     }
 
-    public function array_mix(array $array1, array $array2)
+    public function setScope($scope='', $arg = [])
     {
-        $merged = $array1;
+        //$this->_current_scope=$scope;
 
-        foreach ($array2 as $key => $value) {// &$value
-            if (true === \is_array($value)
-                && true === isset($merged[$key])
-                && true === \is_array($merged[$key])
-            ) {
-                $merged[$key] = $this->array_mix($merged[$key], $value);
-            } else {
-                $merged[$key] = $value;
-            }
+        if (false === isset($this->var_[$scope])) {
+            $this->var_[$scope]=array();
         }
+        $var = array_merge($var=&$this->var_[$scope], $arg);
 
-        return $merged;
     }
 
     /**
@@ -183,10 +182,15 @@ class Template
      *
      * @return null
      */
-    public function printContents($fid, $addAssign = []) : void
+    public function printContents($fid, $addAssign = [], $scope = '') : void
     {
         if (true === isset($this->tpl_[$fid]) && !$this->tpl_[$fid]) {
             return;
+        }
+
+        if (true === isset($this->var_[$fid]) )
+        {
+            $scope = $fid;
         }
 
         $this->noticeReporting = \error_reporting();
@@ -194,11 +198,11 @@ class Template
         if ($this->notice) {
             \error_reporting($this->noticeReporting | \E_NOTICE);
             \set_error_handler([$this, 'templateNoticeHandler']);
-            $this->requireFile($this->getCompilePath($fid), $addAssign);
+            $this->requireFile($this->getCompilePath($fid), $addAssign, $scope);
             \restore_error_handler();
         } else {
             \error_reporting($this->noticeReporting & ~\E_NOTICE);
-            $this->requireFile($this->getCompilePath($fid), $addAssign);
+            $this->requireFile($this->getCompilePath($fid), $addAssign, $scope);
         }
         \error_reporting($this->noticeReporting);
     }
@@ -373,13 +377,29 @@ class Template
         return $cplPath2;
     }
 
+
     /**
      * @param $tplPath
      * @param mixed $addAssign
      */
-    private function requireFile($tplPath, $addAssign = [])
+    private function requireFile($tplPath, $addAssign = [], $TPL_SCP)
     {
-        \extract($this->var_);
+        \extract($this->var_['']);
+
+        foreach ($this->var_[$TPL_SCP] as $k => $v) {
+
+            if (true === \is_array($v)) {
+                foreach ($v as $k1 => $v2) {
+                    ${$k}[$k1] = $v2;
+                }
+            } else {
+                ${$k} = $v;
+            }
+        }
+        //unset ($k);  unset ($v);  unset ($V);
+
+
+        //\extract($this->var_[$TPL_SCP]);
         \extract($addAssign);
 
         if (true === \file_exists($tplPath)) {

@@ -88,8 +88,13 @@ class Response
 
     public $headers = [];
 
-    public function __construct()
+    final public function __construct()
     {
+        if (true === \method_exists($this, '__init')) {
+            $this->__init();
+        } elseif (true === \method_exists($this, '__init__')) {
+            $this->__init__();
+        }
     }
 
     public function setJsonContent(array $array = [], $option = null)

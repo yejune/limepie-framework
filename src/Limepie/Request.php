@@ -30,11 +30,15 @@ class Request
 
     public $fileKeys = ['error', 'name', 'size', 'tmp_name', 'type'];
 
-    public $defaultLocale = 'ko_KR';
+    public $language = 'ko';
+
+    public $locale = 'ko_KR';
 
     public $locales = [
         'ko' => 'ko_KR',
         'en' => 'en_US',
+        'zh' => 'zh_CN',
+        'ja' => 'ja_JP',
     ];
 
     final public function __construct()
@@ -46,8 +50,8 @@ class Request
         $this->uri      = $this->getRequestUri();
 
         $tmp         = \explode('?', $this->uri, 2);
-        $this->path  = $tmp[0]  ?? '';
-        $this->query = $tmp1[1] ?? '';
+        $this->path  = $tmp[0] ?? '';
+        $this->query = $tmp[1] ?? '';
 
         if ($this->path) {
             $this->segments = \explode('/', \trim($this->path, '/'));
@@ -55,25 +59,39 @@ class Request
                 $this->parameters[$this->segments[$i]] = $this->segments[$i + 1] ?? '';
             }
         }
+
+        $this->language = $this->getBestLanguage();
+
+        if (true === isset($this->locales[$this->language])) {
+            $this->locale = $this->locales[$this->language];
+        }
+
+        if (true === \method_exists($this, '__init')) {
+            $this->__init();
+        } elseif (true === \method_exists($this, '__init__')) {
+            $this->__init__();
+        }
+    }
+
+    public function setLocale($language)
+    {
+        $this->language = \explode('_', $language)[0];
+
+        if (true === isset($this->locales[$this->language])) {
+            $this->locale = $this->locales[$this->language];
+        }
     }
 
     public function bindTextDomain($domain, $path)
     {
         $charset = 'UTF-8';
-        $language = \str_replace('-', '_', $this->getBestLanguage());
 
-        if (true === isset($this->locales[$language])) {
-            $locale = $this->locales[$language];
-        } else {
-            $locale = $this->defaultLocale;
-        }
-
-        \setlocale(\LC_MESSAGES, "{$locale}.{$charset}");
+        \setlocale(\LC_MESSAGES, $this->locale . '.' . $charset);
         \bindtextdomain($domain, $path);
         \bind_textdomain_codeset($domain, $charset);
         \textdomain($domain);
         //pr($domain, $path, $domain, "{$locale}.{$charset}");
-        return "{$locale}.{$charset}";
+        return $this->locale . '.' . $charset;
     }
 
     /**
@@ -153,9 +171,13 @@ class Request
         return $this->path;
     }
 
-    public function getQueryString()
+    public function getQueryString($append = '')
     {
-        return $this->query;
+        if($this->query) {
+            return $append . \ltrim($this->query, $append);
+        } else {
+            return '';
+        }
     }
 
     public function getSegments() : array
@@ -267,11 +289,20 @@ class Request
         return $this->extractDomain($host);
     }
 
-    public function getSubDomain()
+    public function getDefaultHost()
+    {
+        return $this->getScheme() . '://www.' . $this->getDomain();
+    }
+
+    public function getSubDomain($returnDefault = true)
     {
         $host      = $this->getHost();
         $domain    = $this->extractDomain($host);
         $subDomain = \preg_replace('#(\.)?' . $domain . '#', '', $host);
+
+        if (false === $returnDefault) {
+            return $subDomain;
+        }
 
         return $subDomain ?: (\Limepie\is_cli() ? 'cli' : 'www');
     }
@@ -512,7 +543,7 @@ class Request
             case 'multipart/form-data':
                 if (
                     'POST' === $_SERVER['REQUEST_METHOD']
-                    && empty($_POST)
+                    && (empty($_POST) && empty($_FILES))
                     && 0 < $_SERVER['CONTENT_LENGTH']
                 ) {
                     throw new Exception(\sprintf('The server was unable to handle that much POST data (%s bytes) due to its current configuration', $_SERVER['CONTENT_LENGTH']), 20012);
@@ -913,7 +944,7 @@ class Request
     final protected function getQualityHeader(?string $serverIndex, ?string $name) : array
     {
         $returnedParts = [];
-        $parts         = \preg_split('/,\\s*/', (string)$this->getServer($serverIndex), -1, \PREG_SPLIT_NO_EMPTY);
+        $parts         = \preg_split('/,\\s*/', (string) $this->getServer($serverIndex), -1, \PREG_SPLIT_NO_EMPTY);
 
         foreach ($parts as $part) {
             $headerParts = [];

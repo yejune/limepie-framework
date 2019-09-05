@@ -28,7 +28,7 @@ EOT;
             <img src='{$data['url']}' class='form-preview-image clone-element'>
 EOT;
             $button = <<<EOT
-            <button class="btn btn-primary btn-filesearch-text" type="button"><span data-feather="search"></span></button>
+            <button class="btn btn-filesearch-text" type="button"><span data-feather="search"></span></button>
 EOT;
         } else {
             $value  = '';
@@ -38,7 +38,7 @@ EOT;
             <input type="file" class='form-control-file form-control-image' name="{$key}" value="{$value}" accept="{$accept}" />
 EOT;
             $button = <<<EOT
-            <button class="btn btn-primary btn-filesearch" type="button"><span data-feather="search"></span></button>
+            <button class="btn btn-filesearch" type="button"><span data-feather="search"></span></button>
 EOT;
         }
 

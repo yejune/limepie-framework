@@ -280,7 +280,7 @@ abstract class Server
     {
         $broker = $this->getBrokerInfo($brokerId);
 
-        if (false === isset($broker)) {
+        if (!$broker) {
             return null;
         }
 
@@ -324,14 +324,15 @@ abstract class Server
         }
 
         if ('redirect' === $this->returnType) {
-            $url = $_REQUEST['return_url'];
+            if(true === isset($_REQUEST['return_url'])) {
+                $url = $_REQUEST['return_url'];
 
-            $url = str_replace('//', '//attach@', $url);
-            //header('HTTP/1.1 307');
-            \header("Location: ${url}", true, 307);
-
-            echo "You're being redirected to <a href='{$url}'>${url}</a>";
-            exit;
+                \header('Cache-Control: no-store, no-cache, must-revalidate, post-check=0, pre-check=0');
+                \header('Expires: Sat, 26 Jul 1997 05:00:00 GMT');
+                \header("Location: ${url}", true, 307);
+                echo "You're being redirected to <a href='{$url}'>${url}</a>";
+                exit;
+            }
         }
     }
 
