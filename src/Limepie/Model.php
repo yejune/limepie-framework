@@ -111,29 +111,6 @@ class Model implements \Iterator, \ArrayAccess, \Countable
         return $this->attributes;
     }
 
-    public function getCount($name, $arguments)
-    {
-        $whereKey            = \Limepie\decamelize(\substr($name, 10));
-        [$condition, $binds] = $this->getConditionAndBinds($whereKey, $arguments);
-        $sql                 = <<<SQL
-            SELECT
-                COUNT(*)
-            FROM
-                `{$this->tableName}`
-        SQL;
-
-        if ($condition) {
-            $sql .= '' . $condition;
-        } elseif ($this->condition) {
-            $sql .= '' . $this->condition;
-            $binds = $this->binds;
-        }
-
-        $this->query = $sql;
-
-        return $this->getConnect()->get1($sql, $binds);
-    }
-
     public function setAttributes(array $attributes = [])
     {
         if ($attributes) {
@@ -1082,6 +1059,29 @@ class Model implements \Iterator, \ArrayAccess, \Countable
 
             return $this;
         }
+    }
+
+    public function buildGetCount($name, $arguments)
+    {
+        $whereKey            = \Limepie\decamelize(\substr($name, 10));
+        [$condition, $binds] = $this->getConditionAndBinds($whereKey, $arguments);
+        $sql                 = <<<SQL
+            SELECT
+                COUNT(*)
+            FROM
+                `{$this->tableName}`
+        SQL;
+
+        if ($condition) {
+            $sql .= '' . $condition;
+        } elseif ($this->condition) {
+            $sql .= '' . $this->condition;
+            $binds = $this->binds;
+        }
+
+        $this->query = $sql;
+
+        return $this->getConnect()->get1($sql, $binds);
     }
 
     private function buildOrderBy($name, $arguments)
