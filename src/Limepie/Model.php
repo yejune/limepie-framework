@@ -75,7 +75,6 @@ class Model implements \Iterator, \ArrayAccess, \Countable
 
     public function __call($name, $arguments)
     {
-
         if ('gets' === $name) {
             return $this->buildGets($name, $arguments);
         } elseif ('get' === $name) {
@@ -88,6 +87,8 @@ class Model implements \Iterator, \ArrayAccess, \Countable
             return $this->buildAnd($name, $arguments);
         } elseif (0 === \strpos($name, 'key')) {
             return $this->buildKey($name, $arguments);
+        } elseif (0 === \strpos($name, 'alias')) {
+            return $this->buildAlias($name, $arguments);
         } elseif (0 === \strpos($name, 'match')) {
             return $this->buildMatch($name, $arguments);
         } elseif (0 === \strpos($name, 'getBy')) {
@@ -103,7 +104,6 @@ class Model implements \Iterator, \ArrayAccess, \Countable
         }
 
         throw new \Limepie\Exception('"' . $name . '" method not found', 1999);
-
     }
 
     public function __debugInfo()
@@ -153,8 +153,8 @@ class Model implements \Iterator, \ArrayAccess, \Countable
 
                 $functionName = 'getBy' . \Limepie\camelize($rightKeyName);
 
-                if(false === isset($attributes[$leftKeyName])) {
-                    throw new \Exception('relation left '.$this->tableName. ' "' . $leftKeyName. '" field not found');
+                if (false === isset($attributes[$leftKeyName])) {
+                    throw new \Exception('relation left ' . $this->tableName . ' "' . $leftKeyName . '" field not found');
                 }
                 $args = [$attributes[$leftKeyName]];
 
@@ -557,7 +557,7 @@ class Model implements \Iterator, \ArrayAccess, \Countable
                 if (true === isset($trace['file'])) {
                     if (false === \strpos($trace['file'], '/limepie-framework/src/')) {
                         //if($trace['function'] == '__call') continue;
-                        $message  = $offset.' not found';
+                        $message  = $offset . ' not found';
                         $code     = '123';
                         $filename = $trace['file'];
                         $line     = $trace['line'];
@@ -657,7 +657,16 @@ class Model implements \Iterator, \ArrayAccess, \Countable
         return $var;
     }
 
-    public function create($debug = false)
+    public function save()
+    {
+        if (0 < \strlen((string) $this->primaryKeyValue)) {
+            return $this->update();
+        }
+
+        return $this->create();
+    }
+
+    public function create()
     {
         $fields = [];
         $binds  = [];
@@ -695,25 +704,63 @@ class Model implements \Iterator, \ArrayAccess, \Countable
             ({$values})
         SQL;
 
-        //pr($sql, $binds);
-        $result = false;
+        $result     = false;
+        $primaryKey = '';
 
         if ($this->sequenceName) {
-            $seq                                     = $this->getConnect()->setAndGetSequnce($sql, $binds);
-            $this->attributes[$this->primaryKeyName] = $seq;
+            $primaryKey                              = $this->getConnect()->setAndGetSequnce($sql, $binds);
+            $this->attributes[$this->primaryKeyName] = $primaryKey;
         } else {
             if ($this->getConnect()->set($sql, $binds)) {
-                $seq = $this->attributes[$this->primaryKeyName];
+                $primaryKey = $this->attributes[$this->primaryKeyName];
             }
         }
 
-        if ($debug) {
-            \Limepie\pr($sql, $binds, [$this->primaryKeyName => $seq]);
+        if ($primaryKey) {
+            $this->primaryKeyValue = $primaryKey;
+
+            return $this;
         }
 
-        if ($seq) {
-            $this->primaryKeyValue = $seq;
+        return false;
+    }
 
+    // TODO: db에서 가져온것과 비교해서 바뀌지 않으면 업데이트 하지 말기
+    public function update()
+    {
+        $fields = [];
+
+        $binds = [
+            ':' . $this->primaryKeyName => $this->attributes[$this->primaryKeyName],
+        ];
+
+        foreach ($this->allFields as $field) {
+            if ($this->sequenceName === $field) {
+            } else {
+                if (true === \is_array($this->attributes[$field])) {
+                    $fields[] = "`{$this->tableName}`." . '`' . $field . '` = ' . $this->attributes[$field][0];
+
+                    foreach ($this->attributes[$field][1] as $vKey => $vValue) {
+                        $binds[':' . $vKey] = $vValue;
+                    }
+                } else {
+                    $fields[]            = "`{$this->tableName}`." . '`' . $field . '` = :' . $field;
+                    $binds[':' . $field] = $this->attributes[$field];
+                }
+            }
+        }
+        $field = \implode(', ', $fields);
+        $where = $this->primaryKeyName;
+        $sql   = <<<SQL
+            UPDATE
+                `{$this->tableName}`
+            SET
+                {$field}
+            WHERE
+            `{$where}` = :{$where}
+        SQL;
+
+        if ($this->getConnect()->set($sql, $binds)) {
             return $this;
         }
 
@@ -778,8 +825,6 @@ class Model implements \Iterator, \ArrayAccess, \Countable
         }
         $result = false;
 
-        //\pr($this->attributes);
-
         foreach ($this->attributes as $index => &$object) {
             $sql = <<<SQL
                 DELETE
@@ -810,53 +855,6 @@ class Model implements \Iterator, \ArrayAccess, \Countable
         }
 
         return false;
-    }
-
-    // TODO: db에서 가져온것과 비교해서 바뀌지 않으면 업데이트 하지 말기
-    public function update($debug = false)
-    {
-        $fields = [];
-
-        $binds  = [
-            ':' . $this->primaryKeyName => $this->attributes[$this->primaryKeyName],
-        ];
-
-        foreach ($this->allFields as $field) {
-            if ($this->sequenceName === $field) {
-            } else {
-                if (true === \is_array($this->attributes[$field])) {
-                    $fields[] = "`{$this->tableName}`." . '`' . $field . '` = ' . $this->attributes[$field][0];
-
-                    foreach ($this->attributes[$field][1] as $vKey => $vValue) {
-                        $binds[':' . $vKey] = $vValue;
-                    }
-                } else {
-                    $fields[]            = "`{$this->tableName}`." . '`' . $field . '` = :' . $field;
-                    $binds[':' . $field] = $this->attributes[$field];
-                }
-            }
-        }
-        $field = \implode(', ', $fields);
-        $where = $this->primaryKeyName;
-        $sql   = <<<SQL
-            UPDATE
-                `{$this->tableName}`
-            SET
-                {$field}
-            WHERE
-            `{$where}` = :{$where}
-        SQL;
-
-        if ($debug) {
-            \Limepie\pr($sql, $binds);
-        }
-
-        if ($this->getConnect()->set($sql, $binds)) {
-            return $this;
-        }
-
-        return false;
-        //return $this;
     }
 
     public function getSelectFields()
@@ -949,12 +947,35 @@ class Model implements \Iterator, \ArrayAccess, \Countable
         //exit;
     }
 
+    public function buildGetCount($name, $arguments)
+    {
+        $whereKey            = \Limepie\decamelize(\substr($name, 10));
+        [$condition, $binds] = $this->getConditionAndBinds($whereKey, $arguments);
+        $sql                 = <<<SQL
+            SELECT
+                COUNT(*)
+            FROM
+                `{$this->tableName}`
+        SQL;
+
+        if ($condition) {
+            $sql .= '' . $condition;
+        } elseif ($this->condition) {
+            $sql .= '' . $this->condition;
+            $binds = $this->binds;
+        }
+
+        $this->query = $sql;
+
+        return $this->getConnect()->get1($sql, $binds);
+    }
+
     private function buildSet($name, $arguments)
     {
         $fieldName = \Limepie\decamelize(\substr($name, 3));
 
         if (false === \in_array($fieldName, $this->allFields, true)) {
-            throw new \Exception('set '. $this->tableName.' "' . $fieldName . '" field not found');
+            throw new \Exception('set ' . $this->tableName . ' "' . $fieldName . '" field not found');
         }
         $this->attributes[$fieldName] = $arguments[0];
 
@@ -1007,8 +1028,8 @@ class Model implements \Iterator, \ArrayAccess, \Countable
         $attributes = [];
 
         foreach ($data as $index => $row) {
-            if(false === isset($row[$this->keyName])) {
-                throw new \Exception('gets '.$this->tableName. ' "'.$this->keyName.'" field not found');
+            if (false === isset($row[$this->keyName])) {
+                throw new \Exception('gets ' . $this->tableName . ' "' . $this->keyName . '" field not found');
             }
             $attributes[$row[$this->keyName]] = new $class($this->getConnect(), $row);
         }
@@ -1061,29 +1082,6 @@ class Model implements \Iterator, \ArrayAccess, \Countable
         }
     }
 
-    public function buildGetCount($name, $arguments)
-    {
-        $whereKey            = \Limepie\decamelize(\substr($name, 10));
-        [$condition, $binds] = $this->getConditionAndBinds($whereKey, $arguments);
-        $sql                 = <<<SQL
-            SELECT
-                COUNT(*)
-            FROM
-                `{$this->tableName}`
-        SQL;
-
-        if ($condition) {
-            $sql .= '' . $condition;
-        } elseif ($this->condition) {
-            $sql .= '' . $this->condition;
-            $binds = $this->binds;
-        }
-
-        $this->query = $sql;
-
-        return $this->getConnect()->get1($sql, $binds);
-    }
-
     private function buildOrderBy($name, $arguments)
     {
         if (1 === \preg_match('#orderBy(?P<field>.*)(?P<how>Asc|Desc)#', $name, $m)) {
@@ -1118,6 +1116,13 @@ class Model implements \Iterator, \ArrayAccess, \Countable
     private function buildKey($name, $arguments)
     {
         $this->keyName = \Limepie\decamelize(\substr($name, 3));
+
+        return $this;
+    }
+
+    private function buildAlias($name, $arguments)
+    {
+        $this->aliasTableName = \Limepie\decamelize(\substr($name, 5));
 
         return $this;
     }
@@ -1230,8 +1235,8 @@ class Model implements \Iterator, \ArrayAccess, \Countable
         $class = \get_called_class();
 
         foreach ($data as $index => $row) {
-            if(false === isset($row[$this->keyName])) {
-                throw new \Exception('gets by '.$this->tableName. ' "'.$this->keyName.'" field not found');
+            if (false === isset($row[$this->keyName])) {
+                throw new \Exception('gets by ' . $this->tableName . ' "' . $this->keyName . '" field not found');
             }
             $attributes[$row[$this->keyName]] = new $class($this->getConnect(), $row, $this);
         }
@@ -1262,7 +1267,7 @@ class Model implements \Iterator, \ArrayAccess, \Countable
         }
 
         if (!$fieldName) {
-            throw new \Limepie\Exception('get '.$this->tableName.' "' . $fieldName . '" field not found', 999);
+            throw new \Limepie\Exception('get ' . $this->tableName . ' "' . $fieldName . '" field not found', 999);
         }
 
         if (true === isset($this->attributes[$fieldName])) {
@@ -1272,7 +1277,7 @@ class Model implements \Iterator, \ArrayAccess, \Countable
         }
 
         if (false === $isOrNull && false === $isOrArray) {
-            throw new \Limepie\Exception('get '. $this->tableName.' "' . $fieldName . '" field not found', 1999);
+            throw new \Limepie\Exception('get ' . $this->tableName . ' "' . $fieldName . '" field not found', 1999);
         }
     }
 
