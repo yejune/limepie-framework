@@ -767,7 +767,7 @@ class Model implements \Iterator, \ArrayAccess, \Countable
         return false;
     }
 
-    public function delete($recursive = true)
+    public function delete($recursive = false)
     {
         if ($recursive) {
             return $this->objectToDelete();
