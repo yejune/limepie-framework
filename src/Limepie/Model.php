@@ -310,6 +310,9 @@ class Model implements \Iterator, \ArrayAccess, \Countable
                 } else {
                     $rightKeyName = $class->tableName . '_' . $class->primaryKeyName;
                 }
+                // ->key로 바꿈
+                $remapKey       = $class->keyName;
+                $class->keyName = $leftKeyName;
 
                 $seqs = [];
 
@@ -345,7 +348,17 @@ class Model implements \Iterator, \ArrayAccess, \Countable
                             $attr = $attribute[$leftKeyName] ?? '';
 
                             if ($attr && true === isset($group[$attr])) {
-                                $attribute->offsetSet($moduleName, $group[$attr]);
+                                if ($class->keyName === $remapKey) {
+                                    $attribute->offsetSet($moduleName, new $class($this->getConnect(), $group[$attr]));
+                                } else {
+                                    // ->key로 바꿈
+                                    $new = [];
+
+                                    foreach ($group[$attr] as $key => $value) {
+                                        $new[$value[$remapKey]] = $value;
+                                    }
+                                    $attribute->offsetSet($moduleName, new $class($this->getConnect(), $new));
+                                }
                             } else {
                                 $attribute->offsetSet($moduleName, []);
                             }
@@ -666,6 +679,10 @@ class Model implements \Iterator, \ArrayAccess, \Countable
         return $this->create();
     }
 
+    public function replace()
+    {
+    }
+
     public function create()
     {
         $fields = [];
@@ -977,6 +994,7 @@ class Model implements \Iterator, \ArrayAccess, \Countable
         if (false === \in_array($fieldName, $this->allFields, true)) {
             throw new \Exception('set ' . $this->tableName . ' "' . $fieldName . '" field not found');
         }
+
         $this->attributes[$fieldName] = $arguments[0];
 
         return $this;
@@ -1253,14 +1271,14 @@ class Model implements \Iterator, \ArrayAccess, \Countable
     private function buildGetField($name, $arguments)
     {
         // field name
-        $isOrArray = false;
+        $isOrEmpty = false;
         $isOrNull  = false;
 
         if (false !== \strpos($name, 'OrNull')) {
             $isOrNull  = true;
             $fieldName = \Limepie\decamelize(\substr($name, 3, -6));
-        } elseif (false !== \strpos($name, 'OrArray')) {
-            $isOrArray = true;
+        } elseif (false !== \strpos($name, 'OrEmpty')) {
+            $isOrEmpty = true;
             $fieldName = \Limepie\decamelize(\substr($name, 3, -7));
         } else {
             $fieldName = \Limepie\decamelize(\substr($name, 3));
@@ -1272,11 +1290,11 @@ class Model implements \Iterator, \ArrayAccess, \Countable
 
         if (true === isset($this->attributes[$fieldName])) {
             return $this->attributes[$fieldName];
-        } elseif (true === $isOrArray) {
+        } elseif (true === $isOrEmpty) {
             return [];
         }
 
-        if (false === $isOrNull && false === $isOrArray) {
+        if (false === $isOrNull && false === $isOrEmpty) {
             throw new \Limepie\Exception('get ' . $this->tableName . ' "' . $fieldName . '" field not found', 1999);
         }
     }

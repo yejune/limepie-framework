@@ -8,8 +8,8 @@ class Group extends \Limepie\Form\Generation\Fields
     {
         $innerhtml = '';
         $script    = '';
-
-        foreach ($specs['properties'] as $propertyKey => $propertyValue) {
+        $html = '';
+        foreach ($specs['properties'] ?? [] as $propertyKey => $propertyValue) {
             if (false === isset($propertyValue['type'])) {
                 \pr($propertyValue);
             }

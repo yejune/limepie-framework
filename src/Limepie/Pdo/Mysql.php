@@ -40,7 +40,7 @@ class Mysql extends \Pdo
             //$end  = \limepie\toolkit::timer(__FILE__, __LINE__);
             return $result;
         } catch (\PDOException $e) {
-            throw $e;
+            throw new Exception\Execute($e, $this->getErrorFormat($statement, $bindParameters));
         }
     }
 
@@ -66,7 +66,7 @@ class Mysql extends \Pdo
             //$end  = \limepie\toolkit::timer(__FILE__, __LINE__);
             return $result;
         } catch (\PDOException $e) {
-            throw $e;
+            throw new Exception\Execute($e, $this->getErrorFormat($statement, $bindParameters));
         }
     }
 
@@ -96,7 +96,7 @@ class Mysql extends \Pdo
 
             return false;
         } catch (\PDOException $e) {
-            throw $e;
+            throw new Exception\Execute($e, $this->getErrorFormat($statement, $bindParameters));
         }
     }
 
@@ -113,7 +113,7 @@ class Mysql extends \Pdo
         try {
             return self::execute($statement, $bindParameters, true);
         } catch (\PDOException $e) {
-            throw new ExcuteException($e, $statement);
+            throw new Exception\Execute($e, $this->getErrorFormat($statement, $bindParameters));
             //throw $e;
         }
     }
@@ -223,7 +223,7 @@ class Mysql extends \Pdo
             return $return;
         }
 
-        throw new TransactionException('commit, There is no active transaction', 50001);
+        throw new Exception\Transaction('commit, There is no active transaction', 50001);
     }
 
     public function rollback()
@@ -239,7 +239,7 @@ class Mysql extends \Pdo
             return true;
         }
 
-        throw new TransactionException('rollback, There is no active transaction', 50001);
+        throw new Exception\Transaction('rollback, There is no active transaction', 50001);
     }
 
     /**
@@ -260,7 +260,7 @@ class Mysql extends \Pdo
                 //if (false === $return) {
                 if (!$return) {
                     //\Peanut\Constant::TRANSACTION_FAILURE
-                    throw new TransactionException('Transaction Failure', 50003);
+                    throw new Exception\Transaction('Transaction Failure', 50003);
                 }
 
                 if ($this->commit()) {
@@ -268,7 +268,7 @@ class Mysql extends \Pdo
                 }
             }
 
-            throw new \TransactionException('Transaction Failure', 50005);
+            throw new Exception\Transaction('Transaction Failure', 50005);
         } catch (\Throwable $e) {
             $this->rollback();
 
@@ -324,59 +324,15 @@ class Mysql extends \Pdo
 
         return $mode;
     }
-}
 
-class TransactionException extends \Limepie\Exception
-{
-    public function __construct($e, int $code = 0)
+    private function getErrorFormat($query, $binds)
     {
-        parent::__construct($e, $code);
-        $current = $this->currentTrace();
+        $string = [];
 
-        if ($current) {
-            $this->setFile($current['file']);
-            $this->setLine($current['line']);
-        }
-    }
-
-    public function currentTrace()
-    {
-        $trace = $this->getTrace();
-
-        foreach ($trace as $row) {
-            if ('Limepie\Pdo\Mysql' !== $row['class']) {
-                return $row;
-            }
+        foreach ($binds as $key => $value) {
+            $string[] = $key . ' => ' . $value;
         }
 
-        return false;
-    }
-}
-
-class ExcuteException extends \Limepie\Exception
-{
-    public function __construct($e, $query)
-    {
-        parent::__construct($e);
-        $current = $this->currentTrace();
-
-        if ($current) {
-            $this->setFile($current['file']);
-            $this->setLine($current['line']);
-        }
-        $this->setMessage($e->getMessage() . ',' . \PHP_EOL . $query);
-    }
-
-    public function currentTrace()
-    {
-        $trace = $this->getTrace();
-
-        foreach ($trace as $row) {
-            if ('Limepie\Pdo\Mysql' !== $row['class']) {
-                return $row;
-            }
-        }
-
-        return false;
+        return $query . ' [' . \implode(', ', $string) . ']';
     }
 }

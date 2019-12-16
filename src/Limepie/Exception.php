@@ -10,7 +10,7 @@ class Exception extends \Exception
 
     public $_previous;
 
-    public function __construct($e, int $code = 0, Throwable $previous = null)
+    public function __construct($e, int $code = 0, \Throwable $previous = null)
     {
         if (true === \is_object($e)) {
             $this->setMessage($e->getMessage());
@@ -27,15 +27,23 @@ class Exception extends \Exception
         }
     }
 
-    public function x__toString()
+    public function __toString()
     {
+
+$s = opcache_get_status();
+
+// echo '<pre>';
+// print_r($s);
+// \print_r(\get_included_files());
+
+// echo '</pre>';
         //pr($this);
        // if (false === \strpos($this->getFile(), '/limepie-framework/src/')) {
             $traces = $this->getTraces();
 //pr($traces);
             foreach ($traces as $trace) {
                 if (true === isset($trace['file'])) {
-                    if (false === \strpos($trace['file'], '/limepie-framework/src/')) {
+                    //if (false === \strpos($trace['file'], '/limepie-framework/src/')) {
                         $filename = $trace['file'];
                         $line     = $trace['line'];
 
@@ -50,7 +58,7 @@ class Exception extends \Exception
                         }
 
                         break;
-                    }
+                    //}
                 }
             }
         // } else {

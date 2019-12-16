@@ -230,7 +230,7 @@ function refparse($arr = [], $basepath = '') : array
 {
     $return = [];
 
-    foreach ($arr as $key => $value) {
+    foreach ($arr ?? [] as $key => $value) {
         if (true === \in_array($key, ['$after', '$before', '$change'], true)) {
         } elseif ('$ref' === $key) {
             if (false === \is_array($value)) {
@@ -286,25 +286,31 @@ function refparse($arr = [], $basepath = '') : array
 
             $return = \array_merge($return, $yml);
         } elseif (true === \is_array($value)) {
-            $return[$key] = \Limepie\refparse($value, $basepath);
-
             if (true === isset($value['lang'])) {
+                if ('append' === $value['lang']) {
+                    $return[$key] = \Limepie\refparse($value, $basepath);
+                }
                 $default = $value;
-                unset($default['lang']);
-                $default2                      = $default;
-                $default2['rules']['required'] = false;
+                unset($default['lang'], $default['class'], $default['description'], $default['default']);
+                $default2 = $default;
 
+                if ('append' === $value['lang']) {
+                    $default2['rules']['required'] = false;
+                }
                 $value = [
                     'label'      => $value['label'],
                     'type'       => 'group',
+                    'class'      => $value['class'] ?? '',
                     'properties' => [
-                        'ko' => ['label' => \__('core', '한국어'), 'prepend' => '<i class="flag-icon flag-icon-kr"></i>'] + $default2,
-                        'en' => ['label' => \__('core', '영어'), 'prepend' => '<i class="flag-icon flag-icon-us"></i>'] + $default2,
-                        'zh' => ['label' => \__('core', '중국어'), 'prepend' => '<i class="flag-icon flag-icon-cn"></i>'] + $default2,
-                        'ja' => ['label' => \__('core', '일본어'), 'prepend' => '<i class="flag-icon flag-icon-jp"></i>'] + $default2,
+                        'ko' => ['label' => \Limepie\__('core', '한국어'), 'prepend' => '<i class="flag-icon flag-icon-kr"></i>'] + $default2,
+                        'en' => ['label' => \Limepie\__('core', '영어'), 'prepend' => '<i class="flag-icon flag-icon-us"></i>'] + $default2,
+                        'zh' => ['label' => \Limepie\__('core', '중국어'), 'prepend' => '<i class="flag-icon flag-icon-cn"></i>'] + $default2,
+                        'ja' => ['label' => \Limepie\__('core', '일본어'), 'prepend' => '<i class="flag-icon flag-icon-jp"></i>'] + $default2,
                     ],
                 ];
                 $return[$key . '_langs'] = \Limepie\refparse($value, $basepath);
+            } else {
+                $return[$key] = \Limepie\refparse($value, $basepath);
             }
         } else {
             $return[$key] = $value;
@@ -342,9 +348,10 @@ function yml_parse_file($file, \Closure $callback = null)
 
         $data = \Limepie\refparse($spec, $basepath);
 
-        if(true === isset($callback) && $callback) {
+        if (true === isset($callback) && $callback) {
             return $callback($data);
         }
+
         return $data;
     }
 
@@ -377,40 +384,47 @@ function array_merge_recursive_distinct(array $array1, array $array2) : array
     return $merged;
 }
 
-function array_key_flatten($array) {
-    if(!isset($keys) || !is_array($keys)) {
-        $keys = array();
+function array_key_flatten($array)
+{
+    if (!isset($keys) || !\is_array($keys)) {
+        $keys = [];
     }
-    foreach($array as $key => $value) {
+
+    foreach ($array as $key => $value) {
         $keys[] = $key;
-        if(is_array($value)) {
-            $keys = array_merge($keys,\Limepie\array_key_flatten($value));
+
+        if (\is_array($value)) {
+            $keys = \array_merge($keys, \Limepie\array_key_flatten($value));
         }
     }
+
     return $keys;
 }
-function array_value_flatten($array) {
-    if(!isset($values) || !is_array($values)) {
-        $values = array();
+function array_value_flatten($array)
+{
+    if (!isset($values) || !\is_array($values)) {
+        $values = [];
     }
-    foreach($array as $key => $value) {
-        if(is_array($value)) {
-            $values = array_merge($values,\Limepie\array_values_flatten($value));
+
+    foreach ($array as $key => $value) {
+        if (\is_array($value)) {
+            $values = \array_merge($values, \Limepie\array_values_flatten($value));
         } else {
             $values[] = $value;
         }
     }
+
     return $values;
 }
 
 function array_flattenx($items)
 {
-    if (! is_array($items)) {
+    if (!\is_array($items)) {
         return [$items];
     }
 
-    return array_reduce($items, function ($carry, $item) {
-        return array_merge($carry, array_flatten($item));
+    return \array_reduce($items, function($carry, $item) {
+        return \array_merge($carry, \array_flatten($item));
     }, []);
 }
 
@@ -712,23 +726,23 @@ function genRandomString($length = 5)
 function decamelize($word)
 {
     return \preg_replace_callback(
-      '/(^|[a-z])([A-Z])/',
-      function($m) {
-          return \strtolower(\strlen($m[1]) ? "{$m[1]}_{$m[2]}" : "{$m[2]}");
-      },
-      $word
-  );
+        '/(^|[a-z])([A-Z])/',
+        function($m) {
+            return \strtolower(\strlen($m[1]) ? "{$m[1]}_{$m[2]}" : "{$m[2]}");
+        },
+        $word
+    );
 }
 
 function camelize($word)
 {
     return \preg_replace_callback(
-      '/(^|_|-)([a-zA-Z]+)/',
-      function($m) {
-          return \ucfirst(\strtolower("{$m[2]}"));
-      },
-      $word
-  );
+        '/(^|_|-)([a-zA-Z]+)/',
+        function($m) {
+            return \ucfirst(\strtolower("{$m[2]}"));
+        },
+        $word
+    );
 }
 
 function array_extract($arrays, $key, $index = null)
@@ -736,10 +750,11 @@ function array_extract($arrays, $key, $index = null)
     $return = [];
 
     foreach ($arrays as $i => $value) {
-        if(true === isset($index)) {
-            if(true === is_array($index)) {
+        if (true === isset($index)) {
+            if (true === \is_array($index)) {
                 $tmp = $value;
-                foreach($index as $k1) {
+
+                foreach ($index as $k1) {
                     $tmp = $tmp[$k1];
                 }
                 $i1 = $tmp;
@@ -749,13 +764,14 @@ function array_extract($arrays, $key, $index = null)
         } else {
             $i1 = $i;
         }
-        if(true === is_array($key)) {
+
+        if (true === \is_array($key)) {
             $tmp = $value;
-            foreach($key as $k1) {
+
+            foreach ($key as $k1) {
                 $tmp = $tmp[$k1];
             }
             $return[$i1] = $tmp;
-
         } else {
             $return[$i1] = $value[$key];
         }
@@ -937,6 +953,7 @@ function number_format($number)
 
     return 0;
 }
+
 function array_insert(&$array, $position, $insert)
 {
     if (\is_int($position)) {
@@ -958,4 +975,57 @@ function count($target)
     }
 
     return \count($target);
+}
+
+function seqtokey($seq)
+{
+    return '__-' . \str_pad((string) $seq, 11, '0', \STR_PAD_LEFT) . '-__';
+}
+
+function seq2key($seq)
+{
+    return \Limepie\seqtokey($seq);
+}
+
+function keytoseq($key)
+{
+    if (1 === \preg_match('#^__-([0]+)?(?P<seq>\d+)-__$#', $key, $m)) {
+        return $m['seq'];
+    }
+
+    return null;
+}
+
+function key2seq($key)
+{
+    return \Limepie\keytoseq($key);
+}
+
+function cartesian_product(array $input)
+{
+    $result = [[]];
+
+    foreach ($input as $key => $values) {
+        $append = [];
+
+        foreach ($result as $data) {
+            foreach ($values as $value) {
+                $append[] = $data + [$key => $value];
+            }
+        }
+        $result = $append;
+    }
+
+    return $result;
+}
+
+function http_build_query(array $data = [], $glue = '=', $separator = '&')
+{
+    $return = [];
+
+    foreach ($data as $key => $value) {
+        $return[] = $key . $glue . $value;
+    }
+
+    return \implode($separator, $return);
 }

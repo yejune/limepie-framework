@@ -354,13 +354,15 @@ class Template
         $cplHead = "<?php /* Peanut\Template " . \sha1_file($tplPath, false) . ' ' . \date('Y/m/d H:i:s', \filemtime($tplPath)) . ' ' . $tplPath . ' ';
 
         if ('dev' !== $this->compileCheck && false !== $cplPath) {
-            $fp   = \fopen($cplPath, 'rb');
-            $head = \fread($fp, \strlen($cplHead) + 9);
-            \fclose($fp);
+            if(true === file_exists($cplPath)) {
+                $fp   = \fopen($cplPath, 'rb');
+                $head = \fread($fp, \strlen($cplHead) + 9);
+                \fclose($fp);
 
-            if (9 < \strlen($head)
-                && \substr($head, 0, 66) === \substr($cplHead, 0, 66) && \filesize($cplPath) === (int) \substr($head, -9)) {
-                return $cplPath;
+                if (9 < \strlen($head)
+                    && \substr($head, 0, 66) === \substr($cplHead, 0, 66) && \filesize($cplPath) === (int) \substr($head, -9)) {
+                    return $cplPath;
+                }
             }
         }
 

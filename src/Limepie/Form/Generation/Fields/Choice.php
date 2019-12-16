@@ -60,11 +60,11 @@ class Choice extends \Limepie\Form\Generation\Fields
                 $checked = (string) $value === (string) $k1 ? 'checked' : '';
                 $active  = (string) $value === (string) $k1 ? 'active' : '';
                 $buttons .= <<<EOD
-<label class="btn btn-switch {$active} {$elementClass}">
-<input type="radio" name="{$key}" autocomplete="off" value="{$k1}" {$checked} ${onchange}> {$v1}
-</label>
+                    <label class="btn btn-switch {$active} {$elementClass}">
+                    <input type="radio" name="{$key}" autocomplete="off" value="{$k1}" {$checked} ${onchange}> {$v1}
+                    </label>
 
-EOD;
+                EOD;
             }
             $dotKey = \str_replace(['[', ']'], ['.', ''], $key);
 
@@ -105,41 +105,51 @@ EOD;
 
                         if ($v2) {
                             $script .= <<<EOD
-        if({$k1} == $(this).val()) {
-            $('[name="{$keyAs2}.layer"]').removeClass('d-none').addClass('d-block');
-        }
+                                if({$k1} == $(this).val()) {
+                                    $('[name="{$keyAs2}.layer"]').removeClass('d-none').addClass('d-block');
+                                }
 
-EOD;
+                            EOD;
                         } else {
                             $script .= <<<EOD
-        if({$k1} == $(this).val()) {
-            $('[name="{$keyAs2}.layer"]').removeClass('d-block').addClass('d-none');
-        }
+                                if({$k1} == $(this).val()) {
+                                    $('[name="{$keyAs2}.layer"]').removeClass('d-block').addClass('d-none');
+                                }
 
-EOD;
+                            EOD;
                         }
                     }
                 }
             }
             $scripts = <<<EOD
-<script>
-(function () {
-    $('[name="{$keyName}"]').change(function(ev) {
-        ev.preventDefault();
-{$script}
-        var form = $( this ).closest( "form" )[ 0 ];
-        var validator = $.data( form, "validator" );
-        validator.loadvalid();
-    });
-}());
-</script>
-EOD;
+                <script>
+                (function () {
+                    $('[name="{$keyName}"]').change(function(ev) {
+                        ev.preventDefault();
+                        {$script}
+                        var form = $( this ).closest( "form" )[ 0 ];
+                        var validator = $.data( form, "validator" );
+                        validator.loadvalid();
+                    });
+                }());
+                </script>
+            EOD;
+
+            if (true === isset($property['onchange'])) {
+                $scripts .= <<<EOD
+                    <script>
+                    $(function(){
+                        $('[name="{$keyName}"]:checked').eq(0).trigger('change');
+                    });
+                    </script>
+                EOD;
+            }
             $html = <<<EOT
-            <div class="btn-group btn-group-toggle{$readonly}{$buttonClass}" data-toggle="buttons">
-            {$buttons}
-            </div>
-            {$scripts}
-EOT;
+                <div class="btn-group btn-group-toggle{$readonly}{$buttonClass}" data-toggle="buttons">
+                {$buttons}
+                </div>
+                {$scripts}
+            EOT;
         } else {
             $html = '<input type="text" class="form-control" value="application에서 설정하세요." />';
         }
@@ -151,9 +161,9 @@ EOT;
     {
         $value = (bool) $value;
         $html  = <<<EOT
-        {$value}
+            {$value}
 
-EOT;
+        EOT;
 
         return $html;
     }

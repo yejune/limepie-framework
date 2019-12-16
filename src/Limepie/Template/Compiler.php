@@ -768,7 +768,7 @@ class Compiler
                     } elseif (':' === $current['value']) {
                         $last_stat = \array_pop($stat);
 
-                        if ('sam2' !== $last_stat['name'] || !$next['name']) {
+                        if (!$last_stat || 'sam2' !== $last_stat['name'] || !$next['name']) {
                             if (true === $this->debug) {
                                 \pr($xpr, $prev, $current, __LINE__);
                             }
@@ -1012,10 +1012,12 @@ class Compiler
         if (0 < \count($stat)) {
             $last_stat = \array_pop($stat);
 
-            if ('left_parenthesis' === $last_stat['name']) {
-                throw new Compiler\Exception(__LINE__ . ' parse error : file ' . $this->filename . ' line ' . $line . ' ' . $current['org']);
-            } elseif ('left_bracket' === $last_stat['name']) {
-                throw new Compiler\Exception(__LINE__ . ' parse error : file ' . $this->filename . ' line ' . $line . ' ' . $current['org']);
+            if($last_stat) {
+                if ('left_parenthesis' === $last_stat['name']) {
+                    throw new Compiler\Exception(__LINE__ . ' parse error : file ' . $this->filename . ' line ' . $line . ' ' . $current['org']);
+                } elseif ('left_bracket' === $last_stat['name']) {
+                    throw new Compiler\Exception(__LINE__ . ' parse error : file ' . $this->filename . ' line ' . $line . ' ' . $current['org']);
+                }
             }
         }
 

@@ -410,7 +410,7 @@ Validation::addMethod('mincount', function($value, $name, $param) {
 Validation::addMethod('unique', function($value, $name, $param) {
     $unique = [];
     $check = false;
-    $name = \preg_replace('#\[__([0-9a-z]{13,13})__\]$#', '', $name);
+    $name = \preg_replace('#\[__([0-9a-z\*]{13,13})__\]$#', '', $name);
     $data = $this->getValue($name);
 
     if (true === \is_array($data)) {
