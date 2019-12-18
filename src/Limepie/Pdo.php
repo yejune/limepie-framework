@@ -41,7 +41,7 @@ class Pdo
     {
         $dbSource = \parse_url($url);
 
-        if (isset($dbSource['query'])) {
+        if (true === isset($dbSource['query'])) {
             \parse_str($dbSource['query'], $query);
 
             if (isset($query['charset'])) {

@@ -355,7 +355,25 @@ class Model implements \Iterator, \ArrayAccess, \Countable
                                     $new = [];
 
                                     foreach ($group[$attr] as $key => $value) {
-                                        $new[$value[$remapKey]] = $value;
+                                        if (false === \in_array($remapKey, $value->allFields, true)) {
+                                            throw new \Exception($remapKey.' field not found');
+                                        } else {
+                                            if (false === isset($value[$remapKey])) {
+                                                // 키가 존재하지 않을 경우 에러를 낼것인가. 배열을 만들지 않을것인가?
+                                                // 결정 #1
+                                                // 컬럼의 값이 널일경우 매칭을 안시키면 되는데 에러가 나므로 해당 코드를 건너뛸수가 없음.
+                                                // 대상 키가 널이면 새로 만들어질 배열에 포함시키지 않는다.
+                                                // 만약 문제가 생긴다면 모델의 옵션 지정을 통해 에러 또는 건너뜀을 선택하여야 함.
+                                                // 변경 #1
+                                                // 데이터는 문제가 있는 것을 모델에서 회피함으로서 다른 문제가 발생한다.
+                                                // 모델 class에서 처리할수 없는 상황들이 있으므로 데이터를 교정하여야 한다는 결론.
+                                                // 에러 내는것으로 변경함.
+                                                throw new \Exception($remapKey.' field is null, not match');
+                                                // $new[$value[$remapKey]] = $value;
+                                            } else {
+                                                $new[$value[$remapKey]] = $value;
+                                            }
+                                        }
                                     }
                                     $attribute->offsetSet($moduleName, new $class($this->getConnect(), $new));
                                 }
@@ -570,8 +588,14 @@ class Model implements \Iterator, \ArrayAccess, \Countable
                 if (true === isset($trace['file'])) {
                     if (false === \strpos($trace['file'], '/limepie-framework/src/')) {
                         //if($trace['function'] == '__call') continue;
-                        $message  = $offset . ' not found';
-                        $code     = '123';
+
+                        if (false === \in_array($offset, $this->allFields, true)) {
+                            $message  = $offset . ' not found';
+                            $code     = '234';
+                        } else {
+                            $message  = $offset . ' is null';
+                            $code     = '123';
+                        }
                         $filename = $trace['file'];
                         $line     = $trace['line'];
 
@@ -1291,12 +1315,21 @@ class Model implements \Iterator, \ArrayAccess, \Countable
         if (true === isset($this->attributes[$fieldName])) {
             return $this->attributes[$fieldName];
         } elseif (true === $isOrEmpty) {
-            return [];
+            if (false === \in_array($fieldName, $this->allFields, true)) { // model
+                return [];
+            }
+
+            return ''; // column
         }
 
         if (false === $isOrNull && false === $isOrEmpty) {
-            throw new \Limepie\Exception('get ' . $this->tableName . ' "' . $fieldName . '" field not found', 1999);
+            // unknown column
+            if (false === \in_array($fieldName, $this->allFields, true)) {
+                throw new \Limepie\Exception('get ' . $this->tableName . ' "' . $fieldName . '" field not found', 1999);
+            }
         }
+
+        return null;
     }
 
     private function iteratorToArray($attributes)
