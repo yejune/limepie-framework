@@ -10,6 +10,8 @@ class Form
 
     public $validation;
 
+    public $strictMode = false;
+
     public function __construct(array $spec = [])
     {
         $this->spec = $spec;
@@ -31,9 +33,17 @@ class Form
         }
     }
 
+    public function setStrictMode($mode)
+    {
+        $this->strictMode = $mode;
+
+        return $this;
+    }
+
     public function validation(array $data = [], $language = '')
     {
         $this->validation                    = new \Limepie\Form\Validation($data, $language);
+        $this->validation->strictMode        = $this->strictMode;
         $this->validation->reverseConditions = $this->reverseConditions;
 
         return $this->validation->validate($this->spec, $data);

@@ -8,7 +8,7 @@ class Validation
 
     public $language = 'ko';
 
-    public $throwException = false;
+    public $strictMode = true;
 
     public $data = [];
 
@@ -34,7 +34,8 @@ class Validation
         'step'        => 'Please enter a multiple of {0}.',
         'unique'      => 'unique',
         'accept'      => 'Please enter a value with a valid mimetype.',
-        'in'          => 'Not a allowed value'
+        'in'          => 'Not a allowed value',
+        'enddate'     => 'Must be greater than {0}.',
     ];
 
     public function __construct($data = [], $language = '')
@@ -46,6 +47,13 @@ class Validation
         } else {
             $this->language = \Limepie\get_language();
         }
+    }
+
+    public function setStrictMode($mode)
+    {
+        $this->strictMode = $mode;
+
+        return $this;
     }
 
     public static function addMethod($name, $callback)
@@ -180,7 +188,7 @@ class Validation
             }
         }
 
-        if ($data && $this->throwException) {
+        if ($data && $this->strictMode) {
             throw new \Exception('spec, element not equal.');
         }
         //pr($this->errors);
@@ -472,4 +480,11 @@ Validation::addMethod('equalTo', function($value, $name, $param) {
     $target = \ltrim($param, '#.');
 
     return $this->getValue($target) === $value;
+});
+
+
+Validation::addMethod('enddate', function($value, $name, $param) {
+    $start = $this->getValue($this->getNameByDot($param));
+    return strtotime($start) <= strtotime($value) || $value == "";
+
 });
