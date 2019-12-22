@@ -75,6 +75,8 @@ class Model implements \Iterator, \ArrayAccess, \Countable
 
     public function __call($name, $arguments)
     {
+
+
         if ('gets' === $name) {
             return $this->buildGets($name, $arguments);
         } elseif ('get' === $name) {
@@ -83,8 +85,12 @@ class Model implements \Iterator, \ArrayAccess, \Countable
             return $this->buildOrderBy($name, $arguments);
         } elseif (0 === \strpos($name, 'where')) {
             return $this->buildWhere($name, $arguments);
+
         } elseif (0 === \strpos($name, 'and')) {
             return $this->buildAnd($name, $arguments);
+        } elseif (0 === \strpos($name, 'or')) {
+            return $this->buildOr($name, $arguments);
+
         } elseif (0 === \strpos($name, 'key')) {
             return $this->buildKey($name, $arguments);
         } elseif (0 === \strpos($name, 'alias')) {
@@ -101,8 +107,19 @@ class Model implements \Iterator, \ArrayAccess, \Countable
             return $this->buildSet($name, $arguments);
         } elseif (0 === \strpos($name, 'get')) { // get field
             return $this->buildGetField($name, $arguments);
+        } elseif (0 === \strpos($name, 'gt')) {
+            return $this->buildGt($name, $arguments);
+        } elseif (0 === \strpos($name, 'lt')) {
+            return $this->buildGetField($name, $arguments);
+        } elseif (0 === \strpos($name, 'ge')) {
+            return $this->buildGe($name, $arguments);
+        } elseif (0 === \strpos($name, 'le')) {
+            return $this->buildLe($name, $arguments);
+        } elseif (0 === \strpos($name, 'eq')) {
+            return $this->buildEq($name, $arguments);
+        } elseif (0 === \strpos($name, 'ne')) {
+            return $this->buildNe($name, $arguments);
         }
-
         throw new \Limepie\Exception('"' . $name . '" method not found', 1999);
     }
 
@@ -152,6 +169,7 @@ class Model implements \Iterator, \ArrayAccess, \Countable
                 }
 
                 $functionName = 'getBy' . \Limepie\camelize($rightKeyName);
+
 
                 if (false === isset($attributes[$leftKeyName])) {
                     throw new \Exception('relation left ' . $this->tableName . ' "' . $leftKeyName . '" field not found');
@@ -402,6 +420,9 @@ class Model implements \Iterator, \ArrayAccess, \Countable
         $condition = '';
         $binds     = [];
 
+
+
+
         if (false !== \strpos($whereKey, '_and_')) {
             $whereKeys = \explode('_and_', $whereKey);
             $conds     = [];
@@ -432,6 +453,20 @@ class Model implements \Iterator, \ArrayAccess, \Countable
                     } elseif (0 === \strpos($key, 'ne_')) {
                         $conds[] = "`{$this->tableName}`." . '`' . $key2 . '`' . ' != :' . $key;
                     } else {
+
+
+
+                // $this->bindcount++;
+
+                // $this->conditions[] = [
+                //     'string' => $key. ' = :'.$key.$this->bindcount ,
+                //     'bind' => [
+                //         $key.$this->bindcount => $arguments[$index]
+                //     ]
+                // ];
+
+
+
                         $conds[] = "`{$this->tableName}`." . '`' . $key . '`' . ' = :' . $key;
                     }
                     $binds[':' . $key] = $arguments[$index];
@@ -490,9 +525,14 @@ class Model implements \Iterator, \ArrayAccess, \Countable
         return $this;
     }
 
-    public function and($key, $value)
+    public function and($key, $value = null)
     {
-        $this->and[$key] = $value;
+        if($key instanceof \Closure) {
+
+            \pr($key($this));
+        } else {
+            $this->and[$key] = $value;
+        }
 
         return $this;
     }
@@ -1152,6 +1192,87 @@ class Model implements \Iterator, \ArrayAccess, \Countable
 
         $this->and[$key] = $arguments[0];
 
+
+        $this->bindcount++;
+
+        $this->conditions[] = [
+            'string' => 'and'
+        ];
+
+        $whereKey = \substr($key, 3);
+
+
+        if (0 === \strpos($key, 'gt_')) {
+            $this->bindcount++;
+
+            $this->conditions[] = [
+                'string' => $whereKey. ' > :'.$whereKey.$this->bindcount ,
+                'bind' => [
+                    $whereKey.$this->bindcount => $arguments[0]
+                ]
+            ];
+
+        } elseif (0 === \strpos($key, 'lt_')) {
+            $condition = "`{$this->tableName}`.`{$whereKey2}` < :{$whereKey}";
+        } elseif (0 === \strpos($key, 'ge_')) {
+            $this->bindcount++;
+
+            $this->conditions[] = [
+                'string' => $whereKey. ' >= :'.$whereKey.$this->bindcount ,
+                'bind' => [
+                    $whereKey.$this->bindcount => $arguments[0]
+                ]
+            ];
+
+
+        } elseif (0 === \strpos($whereKey, 'le_')) {
+            $condition = "`{$this->tableName}`.`{$whereKey2}` <= :{$whereKey}";
+        } elseif (0 === \strpos($whereKey, 'eq_')) {
+            $condition = "`{$this->tableName}`.`{$whereKey2}` = :{$whereKey}";
+        } elseif (0 === \strpos($whereKey, 'ne_')) {
+            $condition = "`{$this->tableName}`.`{$whereKey2}` != :{$whereKey}";
+        } else {
+
+            $this->bindcount++;
+
+            $this->conditions[] = [
+                'striwng' => $key. ' = :'.$key.$this->bindcount ,
+                'bind' => [
+                    $key.$this->bindcount => $arguments[0]
+                ]
+            ];
+
+            $condition = "`{$this->tableName}`.`{$whereKey}` = :{$whereKey}";
+        }
+
+
+        //$this->conditions[$key] = $arguments[0];
+
+        return $this;
+    }
+
+    public function open() {
+        $this->conditions[] = ['string' => '('];
+        return $this;
+    }
+
+    public function close() {
+        $this->conditions[] = ['string' => ')'];
+
+        return $this;
+    }
+    public $bindcount      = 0;
+    private function buildGe($name, $arguments) {
+        $key = \Limepie\decamelize(\substr($name, 2));
+
+        $this->bindcount++;
+
+        $this->conditions[] = [
+            'string' => $key. ' >= :'.$key.$this->bindcount ,
+            'bind' => [
+                $key.$this->bindcount => $arguments[0]
+            ]
+        ];
         return $this;
     }
 
