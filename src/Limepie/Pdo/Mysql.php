@@ -305,6 +305,7 @@ class Mysql extends \Pdo
             }
         }
 
+        //pr($statement, $bindParameters);
         $result = $stmt->execute($binds);
 
         if (true === $ret) {

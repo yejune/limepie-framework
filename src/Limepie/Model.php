@@ -52,6 +52,8 @@ class Model implements \Iterator, \ArrayAccess, \Countable
 
     public $joinOn = '';
 
+    public $bindcount = 0;
+
     public function __construct($pdo = '', $attributes = [])
     {
         if ($pdo) {
@@ -75,8 +77,6 @@ class Model implements \Iterator, \ArrayAccess, \Countable
 
     public function __call($name, $arguments)
     {
-
-
         if ('gets' === $name) {
             return $this->buildGets($name, $arguments);
         } elseif ('get' === $name) {
@@ -85,12 +85,10 @@ class Model implements \Iterator, \ArrayAccess, \Countable
             return $this->buildOrderBy($name, $arguments);
         } elseif (0 === \strpos($name, 'where')) {
             return $this->buildWhere($name, $arguments);
-
         } elseif (0 === \strpos($name, 'and')) {
             return $this->buildAnd($name, $arguments);
         } elseif (0 === \strpos($name, 'or')) {
             return $this->buildOr($name, $arguments);
-
         } elseif (0 === \strpos($name, 'key')) {
             return $this->buildKey($name, $arguments);
         } elseif (0 === \strpos($name, 'alias')) {
@@ -120,12 +118,18 @@ class Model implements \Iterator, \ArrayAccess, \Countable
         } elseif (0 === \strpos($name, 'ne')) {
             return $this->buildNe($name, $arguments);
         }
+
         throw new \Limepie\Exception('"' . $name . '" method not found', 1999);
     }
 
     public function __debugInfo()
     {
         return $this->attributes;
+    }
+
+    public function setAttribute($field, $attribute)
+    {
+        $this->attributes[$field] = $attribute;
     }
 
     public function setAttributes(array $attributes = [])
@@ -169,7 +173,6 @@ class Model implements \Iterator, \ArrayAccess, \Countable
                 }
 
                 $functionName = 'getBy' . \Limepie\camelize($rightKeyName);
-
 
                 if (false === isset($attributes[$leftKeyName])) {
                     throw new \Exception('relation left ' . $this->tableName . ' "' . $leftKeyName . '" field not found');
@@ -374,24 +377,23 @@ class Model implements \Iterator, \ArrayAccess, \Countable
 
                                     foreach ($group[$attr] as $key => $value) {
                                         if (false === \in_array($remapKey, $value->allFields, true)) {
-                                            throw new \Exception($remapKey.' field not found');
-                                        } else {
-                                            if (false === isset($value[$remapKey])) {
-                                                // 키가 존재하지 않을 경우 에러를 낼것인가. 배열을 만들지 않을것인가?
-                                                // 결정 #1
-                                                // 컬럼의 값이 널일경우 매칭을 안시키면 되는데 에러가 나므로 해당 코드를 건너뛸수가 없음.
-                                                // 대상 키가 널이면 새로 만들어질 배열에 포함시키지 않는다.
-                                                // 만약 문제가 생긴다면 모델의 옵션 지정을 통해 에러 또는 건너뜀을 선택하여야 함.
-                                                // 변경 #1
-                                                // 데이터는 문제가 있는 것을 모델에서 회피함으로서 다른 문제가 발생한다.
-                                                // 모델 class에서 처리할수 없는 상황들이 있으므로 데이터를 교정하여야 한다는 결론.
-                                                // 에러 내는것으로 변경함.
-                                                throw new \Exception($remapKey.' field is null, not match');
-                                                // $new[$value[$remapKey]] = $value;
-                                            } else {
-                                                $new[$value[$remapKey]] = $value;
-                                            }
+                                            throw new \Exception($remapKey . ' field not found');
                                         }
+
+                                        if (false === isset($value[$remapKey])) {
+                                            // 키가 존재하지 않을 경우 에러를 낼것인가. 배열을 만들지 않을것인가?
+                                            // 결정 #1
+                                            // 컬럼의 값이 널일경우 매칭을 안시키면 되는데 에러가 나므로 해당 코드를 건너뛸수가 없음.
+                                            // 대상 키가 널이면 새로 만들어질 배열에 포함시키지 않는다.
+                                            // 만약 문제가 생긴다면 모델의 옵션 지정을 통해 에러 또는 건너뜀을 선택하여야 함.
+                                            // 변경 #1
+                                            // 데이터는 문제가 있는 것을 모델에서 회피함으로서 다른 문제가 발생한다.
+                                            // 모델 class에서 처리할수 없는 상황들이 있으므로 데이터를 교정하여야 한다는 결론.
+                                            // 에러 내는것으로 변경함.
+                                            throw new \Exception($remapKey . ' field is null, not match');
+                                            // $new[$value[$remapKey]] = $value;
+                                        }
+                                        $new[$value[$remapKey]] = $value;
                                     }
                                     $attribute->offsetSet($moduleName, new $class($this->getConnect(), $new));
                                 }
@@ -419,9 +421,6 @@ class Model implements \Iterator, \ArrayAccess, \Countable
     {
         $condition = '';
         $binds     = [];
-
-
-
 
         if (false !== \strpos($whereKey, '_and_')) {
             $whereKeys = \explode('_and_', $whereKey);
@@ -453,19 +452,14 @@ class Model implements \Iterator, \ArrayAccess, \Countable
                     } elseif (0 === \strpos($key, 'ne_')) {
                         $conds[] = "`{$this->tableName}`." . '`' . $key2 . '`' . ' != :' . $key;
                     } else {
+                        // $this->bindcount++;
 
-
-
-                // $this->bindcount++;
-
-                // $this->conditions[] = [
-                //     'string' => $key. ' = :'.$key.$this->bindcount ,
-                //     'bind' => [
-                //         $key.$this->bindcount => $arguments[$index]
-                //     ]
-                // ];
-
-
+                        // $this->conditions[] = [
+                        //     'string' => $key. ' = :'.$key.$this->bindcount ,
+                        //     'bind' => [
+                        //         $key.$this->bindcount => $arguments[$index]
+                        //     ]
+                        // ];
 
                         $conds[] = "`{$this->tableName}`." . '`' . $key . '`' . ' = :' . $key;
                     }
@@ -527,8 +521,7 @@ class Model implements \Iterator, \ArrayAccess, \Countable
 
     public function and($key, $value = null)
     {
-        if($key instanceof \Closure) {
-
+        if ($key instanceof \Closure) {
             \pr($key($this));
         } else {
             $this->and[$key] = $value;
@@ -630,11 +623,11 @@ class Model implements \Iterator, \ArrayAccess, \Countable
                         //if($trace['function'] == '__call') continue;
 
                         if (false === \in_array($offset, $this->allFields, true)) {
-                            $message  = $offset . ' not found';
-                            $code     = '234';
+                            $message = $offset . ' not found';
+                            $code    = '234';
                         } else {
-                            $message  = $offset . ' is null';
-                            $code     = '123';
+                            $message = $offset . ' is null';
+                            $code    = '123';
                         }
                         $filename = $trace['file'];
                         $line     = $trace['line'];
@@ -1051,6 +1044,20 @@ class Model implements \Iterator, \ArrayAccess, \Countable
         return $this->getConnect()->get1($sql, $binds);
     }
 
+    public function open()
+    {
+        $this->conditions[] = ['string' => '('];
+
+        return $this;
+    }
+
+    public function close()
+    {
+        $this->conditions[] = ['string' => ')'];
+
+        return $this;
+    }
+
     private function buildSet($name, $arguments)
     {
         $fieldName = \Limepie\decamelize(\substr($name, 3));
@@ -1192,39 +1199,34 @@ class Model implements \Iterator, \ArrayAccess, \Countable
 
         $this->and[$key] = $arguments[0];
 
-
         $this->bindcount++;
 
         $this->conditions[] = [
-            'string' => 'and'
+            'string' => 'and',
         ];
 
         $whereKey = \substr($key, 3);
-
 
         if (0 === \strpos($key, 'gt_')) {
             $this->bindcount++;
 
             $this->conditions[] = [
-                'string' => $whereKey. ' > :'.$whereKey.$this->bindcount ,
-                'bind' => [
-                    $whereKey.$this->bindcount => $arguments[0]
-                ]
+                'string' => $whereKey . ' > :' . $whereKey . $this->bindcount,
+                'bind'   => [
+                    $whereKey . $this->bindcount => $arguments[0],
+                ],
             ];
-
         } elseif (0 === \strpos($key, 'lt_')) {
             $condition = "`{$this->tableName}`.`{$whereKey2}` < :{$whereKey}";
         } elseif (0 === \strpos($key, 'ge_')) {
             $this->bindcount++;
 
             $this->conditions[] = [
-                'string' => $whereKey. ' >= :'.$whereKey.$this->bindcount ,
-                'bind' => [
-                    $whereKey.$this->bindcount => $arguments[0]
-                ]
+                'string' => $whereKey . ' >= :' . $whereKey . $this->bindcount,
+                'bind'   => [
+                    $whereKey . $this->bindcount => $arguments[0],
+                ],
             ];
-
-
         } elseif (0 === \strpos($whereKey, 'le_')) {
             $condition = "`{$this->tableName}`.`{$whereKey2}` <= :{$whereKey}";
         } elseif (0 === \strpos($whereKey, 'eq_')) {
@@ -1232,47 +1234,36 @@ class Model implements \Iterator, \ArrayAccess, \Countable
         } elseif (0 === \strpos($whereKey, 'ne_')) {
             $condition = "`{$this->tableName}`.`{$whereKey2}` != :{$whereKey}";
         } else {
-
             $this->bindcount++;
 
             $this->conditions[] = [
-                'striwng' => $key. ' = :'.$key.$this->bindcount ,
-                'bind' => [
-                    $key.$this->bindcount => $arguments[0]
-                ]
+                'striwng' => $key . ' = :' . $key . $this->bindcount,
+                'bind'    => [
+                    $key . $this->bindcount => $arguments[0],
+                ],
             ];
 
             $condition = "`{$this->tableName}`.`{$whereKey}` = :{$whereKey}";
         }
-
 
         //$this->conditions[$key] = $arguments[0];
 
         return $this;
     }
 
-    public function open() {
-        $this->conditions[] = ['string' => '('];
-        return $this;
-    }
-
-    public function close() {
-        $this->conditions[] = ['string' => ')'];
-
-        return $this;
-    }
-    public $bindcount      = 0;
-    private function buildGe($name, $arguments) {
+    private function buildGe($name, $arguments)
+    {
         $key = \Limepie\decamelize(\substr($name, 2));
 
         $this->bindcount++;
 
         $this->conditions[] = [
-            'string' => $key. ' >= :'.$key.$this->bindcount ,
-            'bind' => [
-                $key.$this->bindcount => $arguments[0]
-            ]
+            'string' => $key . ' >= :' . $key . $this->bindcount,
+            'bind'   => [
+                $key . $this->bindcount => $arguments[0],
+            ],
         ];
+
         return $this;
     }
 

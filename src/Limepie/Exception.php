@@ -43,7 +43,7 @@ $s = opcache_get_status();
 //pr($traces);
             foreach ($traces as $trace) {
                 if (true === isset($trace['file'])) {
-                    //if (false === \strpos($trace['file'], '/limepie-framework/src/')) {
+                    if (false === \strpos($trace['file'], '/limepie-framework/src/')) {
                         $filename = $trace['file'];
                         $line     = $trace['line'];
 
@@ -58,7 +58,7 @@ $s = opcache_get_status();
                         }
 
                         break;
-                    //}
+                    }
                 }
             }
         // } else {
