@@ -6,6 +6,8 @@ class Mysql extends \Pdo
 {
     public $info = [];
 
+    public $debug = false;
+
     public function __construct(string $dsn, string $username = '', string $passwd = '', array $options = [])
     {
         $this->info = \parse_url($dsn);
@@ -30,14 +32,21 @@ class Mysql extends \Pdo
     public function gets($statement, $bindParameters = [], $mode = \PDO::FETCH_ASSOC)
     {
         try {
-            //pr($statement, $bindParameters);
             // return parent::fetchAll($statement, $mode, $bindParameters) ?: null;
-            //$start    = \limepie\toolkit::timer(__FILE__, __LINE__);
+
+            if ($this->debug) {
+                \Limepie\Timer::start();
+            }
             $stmt   = self::execute($statement, $bindParameters);
             $mode   = self::getMode($mode);
             $result = $stmt->fetchAll($mode);
             $stmt->closeCursor();
-            //$end  = \limepie\toolkit::timer(__FILE__, __LINE__);
+
+            if ($this->debug) {
+                $timer = \Limepie\Timer::stop();
+                \pr($timer, $this->getErrorFormat($statement, $bindParameters));
+            }
+
             return $result;
         } catch (\PDOException $e) {
             throw new Exception\Execute($e, $this->getErrorFormat($statement, $bindParameters));
@@ -56,14 +65,21 @@ class Mysql extends \Pdo
     public function get($statement, $bindParameters = [], $mode = \PDO::FETCH_ASSOC)
     {
         try {
-            //pr($statement, $bindParameters);
-//            return parent::fetchOne($statement, $mode, $bindParameters) ?: null;
-            //$start    = \limepie\toolkit::timer(__FILE__, __LINE__);
+            // return parent::fetchOne($statement, $mode, $bindParameters) ?: null;
+
+            if ($this->debug) {
+                \Limepie\Timer::start();
+            }
             $stmt   = self::execute($statement, $bindParameters);
             $mode   = self::getMode($mode);
             $result = $stmt->fetch($mode);
             $stmt->closeCursor();
-            //$end  = \limepie\toolkit::timer(__FILE__, __LINE__);
+
+            if ($this->debug) {
+                $timer = \Limepie\Timer::stop();
+                \pr($timer, $this->getErrorFormat($statement, $bindParameters));
+            }
+
             return $result;
         } catch (\PDOException $e) {
             throw new Exception\Execute($e, $this->getErrorFormat($statement, $bindParameters));
@@ -82,12 +98,19 @@ class Mysql extends \Pdo
     public function get1($statement, $bindParameters = [], $mode = \PDO::FETCH_ASSOC)
     {
         try {
-            //$start    = \limepie\toolkit::timer(__FILE__, __LINE__);
+            if ($this->debug) {
+                \Limepie\Timer::start();
+            }
             $stmt   = self::execute($statement, $bindParameters);
             $mode   = self::getMode($mode);
             $result = $stmt->fetch($mode);
             $stmt->closeCursor();
-            //$end  = \limepie\toolkit::timer(__FILE__, __LINE__);
+
+            if ($this->debug) {
+                $timer = \Limepie\Timer::stop();
+                \pr($timer, $this->getErrorFormat($statement, $bindParameters));
+            }
+
             if (true === \is_array($result)) {
                 foreach ($result as $key => $value) {
                     return $value;
@@ -114,7 +137,6 @@ class Mysql extends \Pdo
             return self::execute($statement, $bindParameters, true);
         } catch (\PDOException $e) {
             throw new Exception\Execute($e, $this->getErrorFormat($statement, $bindParameters));
-            //throw $e;
         }
     }
 
@@ -252,14 +274,13 @@ class Mysql extends \Pdo
     public function transaction(callable $callback)
     {
         try {
-            if ($a = $this->begin()) {
+            if ($this->begin()) {
                 $callback = $callback->bindTo($this);
                 $return   = $callback();
                 //$return = \call_user_func_array($callback, [$this]);
 
                 //if (false === $return) {
                 if (!$return) {
-                    //\Peanut\Constant::TRANSACTION_FAILURE
                     throw new Exception\Transaction('Transaction Failure', 50003);
                 }
 
