@@ -923,16 +923,21 @@ function decimal($number) : float
     // $tmp = new \Decimal\Decimal((string) $number);
 
     // return $tmp->trim();
-    $parts  = \explode('.', $number);
-    $result = $parts[0];
 
-    if (true === isset($parts[1])) {
-        if ($r = \rtrim($parts[1], '0')) {
-            $result .= '.' . $r;
+    if (0 < \strlen((string)$number)) {
+        $parts  = \explode('.', $number);
+        $result = $parts[0];
+
+        if (true === isset($parts[1])) {
+            if ($r = \rtrim($parts[1], '0')) {
+                $result .= '.' . $r;
+            }
         }
+
+        return (float) $result;
     }
 
-    return (float) $result;
+    return 0;
 }
 
 function number_format($number)
