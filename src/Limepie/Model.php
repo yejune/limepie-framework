@@ -1138,6 +1138,8 @@ class Model implements \Iterator, \ArrayAccess, \Countable
         $selectFields = $this->getSelectFields();
         $condition    = '';
         $binds        = [];
+        $orderBy      = $this->getOrderBy();
+        // TODO: buildGets와 같이 정리 필요
 
         if (true === isset($arguments[0]['condition'])) { // not use
             $condition = 'WHERE ' . $arguments[0]['condition'];
@@ -1154,6 +1156,7 @@ class Model implements \Iterator, \ArrayAccess, \Countable
             FROM
                 `{$this->tableName}`
             {$condition}
+            {$orderBy}
             LIMIT 1
         SQL;
 
