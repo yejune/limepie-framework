@@ -12,17 +12,21 @@ class Image extends \Limepie\Form\Generation\Fields
             $button = '';
             $html   = <<<EOT
             <input type="text" class='form-control form-control-file' value="{$value}" readonly="readonly" />
-            <input type="text" class='form-control-file form-control-filetext form-control-image' name="{$key}" value="{$value}" accept="{$accept}" />
 EOT;
 
-//             foreach ($data as $key1 => $value1) {
-//                 if ('name' === $key1) {
-//                     continue;
-//                 }
-//                 $html .= <<<EOT
-//                 <input type="hidden" class="clone-element" name="{$key}[{$key1}]" value="{$value1}" />
-            // EOT;
-//             }
+            foreach ($data as $key1 => $value1) {
+                if ('name' === $key1) {
+                    $html .= <<<EOT
+                    <input type="text" class='form-control-file form-control-filetext form-control-image'  name="{$key}[{$key1}]" value="{$value1}" accept="{$accept}" />
+                    EOT;
+
+                } else {
+                    $html .= <<<EOT
+                        <input type="hidden" class="clone-element" name="{$key}[{$key1}]" value="{$value1}" />
+                    EOT;
+
+                }
+            }
 
             $html .= <<<EOT
             <img src='{$data['url']}' class='form-preview-image clone-element'>
