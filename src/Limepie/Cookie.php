@@ -37,11 +37,11 @@ class Cookie
         return self::$keyStores[$key];
     }
 
-    public static function set($key, $value, $expire = 0, $path = '/', $domain = null, $secure = true, $httpOnly = true)
+    public static function set($key, $value, $expires = 0, $path = '/', $domain = null, $secure = true, $httpOnly = true, $samesite = '')
     {
         $_value = Encrypt::pack($value);
 
-        if (self::setRaw($key, $_value, $expire, $path, $domain, $secure, $httpOnly)) {
+        if (self::setRaw($key, $_value, $expires, $path, $domain, $secure, $httpOnly, $samesite)) {
             return $_value;
         }
 
@@ -53,27 +53,44 @@ class Cookie
         return self::isCookie($key) ? Encrypt::unpack(self::getRaw($key)) : null;
     }
 
-    public static function remove($key, $value = '', $expire = 0, $path = '/', $domain = null, $secure = true, $httpOnly = true)
+    public static function setRaw($key, $value, $expires = 0, $path = '/', $domain = null, $secure = true, $httpOnly = true, $samesite = '')
     {
-        return self::_destroy($key, $value, $expire, $path, $domain, $secure, $httpOnly);
-    }
+        if (true === \is_array($expires)) {
+            foreach (['expires', 'path', 'domain', 'secure', 'httponly', 'samesite'] as $cookieKey) {
+                if (true === isset($expires[$cookieKey])) {
+                    ${$cookieKey} = $expires[$cookieKey];
+                }
+            }
 
-    public static function setRaw($key, $value, $expire = 0, $path = '/', $domain = null, $secure = true, $httpOnly = true)
-    {
-        $key    = self::_sethost($key);
+            if (false === isset($expires['expires'])) {
+                $expires = 0;
+            }
+        }
+
+        $key    = self::sethost($key);
         $domain = true === (null === $domain) ? self::$domain : $domain;
 
         if (4096 < \strlen($value)) {
             die('4 KB per cookie maximum');
         }
 
-        if (0 < $expire && \time() >= $expire) {
-            $expire = \time() + $expire;
+        if (0 < $expires && \time() >= $expires) {
+            $expires = \time() + $expires;
         }
 
         $_COOKIE[$key] = $value;
 
-        return \setcookie($key, $value, $expire, $path, $domain, $secure, $httpOnly);
+        $options = [
+            'expires'  => $expires,
+            'path'     => $path,
+            'domain'   => $domain,
+            'secure'   => $secure,
+            'httponly' => $httpOnly,
+            'samesite' => $samesite,
+        ];
+
+        return \setcookie($key, $value, $options);
+        //return \setcookie($key, $value, $expires, $path, $domain, $secure, $httpOnly);
     }
 
     public static function isCookie($key)
@@ -83,27 +100,50 @@ class Cookie
 
     public static function getRaw($key)
     {
-        $key = self::_sethost($key);
+        $key = self::sethost($key);
 
         return $_COOKIE[$key] ?? false;
     }
 
-    private static function _destroy($key, $value = '', $expire = 0, $path = '/', $domain = null, $secure = true, $httpOnly = true)
+    public static function remove($key, $value = '', $expires = 0, $path = '/', $domain = null, $secure = true, $httpOnly = true, $samesite = '')
     {
-        $key    = self::_sethost($key);
+        if (true === \is_array($expires)) {
+            foreach (['expires', 'path', 'domain', 'secure', 'httponly', 'samesite'] as $cookieKey) {
+                if (true === isset($expires[$cookieKey])) {
+                    ${$cookieKey} = $expires[$cookieKey];
+                }
+            }
+
+            if (false === isset($expires['expires'])) {
+                $expires = 0;
+            }
+        } else {
+            $expires = 0;
+        }
+        $key    = self::sethost($key);
         $domain = true === (null === $domain) ? self::$domain : $domain;
 
-        if (isset($_COOKIE[$key])) {
+        if (true === \sset($_COOKIE[$key])) {
             unset($_COOKIE[$key], $_REQUEST[$key]);
             $_COOKIE[$key] = $_REQUEST[$key] = null;
 
-            return \setcookie($key, '', \time() - 3600, $path, $domain, $secure, $httpOnly);
+            $options = [
+                'expires'  => $expires,
+                'path'     => $path,
+                'domain'   => $domain,
+                'secure'   => $secure,
+                'httponly' => $httpOnly,
+                'samesite' => $samesite,
+            ];
+
+            return \setcookie($key, '', $options);
+            //return \setcookie($key, '', \time() - 3600, $path, $domain, $secure, $httpOnly);
         }
 
         return false;
     }
 
-    private static function _sethost($key)
+    private static function sethost($key)
     {
         return $key;
     }
