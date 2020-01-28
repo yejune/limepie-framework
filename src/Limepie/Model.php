@@ -6,6 +6,8 @@ class Model implements \Iterator, \ArrayAccess, \Countable
 {
     public $pdo;
 
+    public $dataTypes = [];
+
     public $tableName;
 
     public $aliasTableName;
@@ -150,9 +152,33 @@ class Model implements \Iterator, \ArrayAccess, \Countable
                     }
                 }
             } else {
-                $this->attributes = $attributes;
+                $this->attributes = $this->buildDataType($attributes);
             }
             $this->primaryKeyValue = $this->attributes[$this->primaryKeyName] ?? null;
+        }
+    }
+
+    public function buildDataType(array $attributes = [])
+    {
+        if ($attributes) {
+            foreach ($attributes as $field => &$value) {
+                if (true === isset($this->dataTypes[$field])) {
+                    switch ($this->dataTypes[$field]) {
+                        case 'serialize':
+                            $value = \unserialize($value);
+                            break;
+                        case 'json':
+                            $value = \json_decode($value, true);
+                            break;
+                        case 'yml':
+                        case 'yaml':
+                            $value = \yaml_parse($value);
+                            break;
+                    }
+                }
+            }
+
+            return $attributes;
         }
     }
 
@@ -752,19 +778,33 @@ class Model implements \Iterator, \ArrayAccess, \Countable
                 if (true === isset($this->attributes[$field])) {
                     $value = $this->attributes[$field];
 
-                    if (true === \is_array($value)) {
-                        $fields[] = '`' . $field . '`';
-
-                        $values[] = $value[0];
-
-                        foreach ($value[1] as $vKey => $vValue) {
-                            $binds[':' . $vKey] = $vValue;
+                    if (true === isset($this->dataTypes[$field])) {
+                        switch ($this->dataTypes[$field]) {
+                            case 'serialize':
+                                $value = \serialize($value);
+                                break;
+                            case 'json':
+                                $value = \json_encode($value);
+                                break;
+                            case 'yml':
+                            case 'yaml':
+                                $value = \yaml_emit($value);
+                                break;
                         }
-                    } else {
+                    }
+
+                    // if (true === \is_array($value)) {
+                    //     $fields[] = '`' . $field . '`';
+                    //     $values[] = $value[0];
+
+                    //     foreach ($value[1] as $vKey => $vValue) {
+                    //         $binds[':' . $vKey] = $vValue;
+                    //     }
+                    // } else {
                         $fields[]            = '`' . $field . '`';
                         $binds[':' . $field] = $value;
                         $values[]            = ':' . $field;
-                    }
+                    // }
                 }
             }
         }
@@ -811,16 +851,33 @@ class Model implements \Iterator, \ArrayAccess, \Countable
         foreach ($this->allFields as $field) {
             if ($this->sequenceName === $field) {
             } else {
-                if (true === \is_array($this->attributes[$field])) {
-                    $fields[] = "`{$this->tableName}`." . '`' . $field . '` = ' . $this->attributes[$field][0];
+                $value = $this->attributes[$field];
 
-                    foreach ($this->attributes[$field][1] as $vKey => $vValue) {
-                        $binds[':' . $vKey] = $vValue;
+                if (true === isset($this->dataTypes[$field])) {
+                    switch ($this->dataTypes[$field]) {
+                        case 'serialize':
+                            $value = \serialize($value);
+                            break;
+                        case 'json':
+                            $value = \json_encode($value);
+                            break;
+                        case 'yml':
+                        case 'yaml':
+                            $value = \yaml_emit($value);
+                            break;
                     }
-                } else {
-                    $fields[]            = "`{$this->tableName}`." . '`' . $field . '` = :' . $field;
-                    $binds[':' . $field] = $this->attributes[$field];
                 }
+
+                // if (true === \is_array($value)) {
+                //     $fields[] = "`{$this->tableName}`." . '`' . $field . '` = ' . $value[0];
+
+                //     foreach ($value[1] as $vKey => $vValue) {
+                //         $binds[':' . $vKey] = $vValue;
+                //     }
+                // } else {
+                    $fields[]            = "`{$this->tableName}`." . '`' . $field . '` = :' . $field;
+                    $binds[':' . $field] = $value;
+                // }
             }
         }
         $field = \implode(', ', $fields);
@@ -1120,6 +1177,7 @@ class Model implements \Iterator, \ArrayAccess, \Countable
             if (false === isset($row[$this->keyName])) {
                 throw new \Exception('gets ' . $this->tableName . ' "' . $this->keyName . '" field not found');
             }
+
             $attributes[$row[$this->keyName]] = new $class($this->getConnect(), $row);
         }
 
@@ -1321,6 +1379,7 @@ class Model implements \Iterator, \ArrayAccess, \Countable
         $attributes = $this->getConnect()->get($sql, $binds);
 
         if ($attributes) {
+            $attributes            = $this->buildDataType($attributes);
             $this->attributes      = $this->getRelation($attributes);
             $this->primaryKeyValue = $this->attributes[$this->primaryKeyName] ?? null;
 
@@ -1395,7 +1454,7 @@ class Model implements \Iterator, \ArrayAccess, \Countable
             if (false === isset($row[$this->keyName])) {
                 throw new \Exception('gets by ' . $this->tableName . ' "' . $this->keyName . '" field not found');
             }
-            $attributes[$row[$this->keyName]] = new $class($this->getConnect(), $row, $this);
+            $attributes[$row[$this->keyName]] = new $class($this->getConnect(), $row);
         }
 
         if ($attributes) {
