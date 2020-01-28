@@ -287,28 +287,90 @@ function refparse($arr = [], $basepath = '') : array
             $return = \array_merge($return, $yml);
         } elseif (true === \is_array($value)) {
             if (true === isset($value['lang'])) {
-                if ('append' === $value['lang']) {
-                    $return[$key] = \Limepie\refparse($value, $basepath);
-                }
-                $default = $value;
-                unset($default['lang'], $default['class'], $default['description'], $default['default']);
-                $default2 = $default;
+                if(1 === preg_match('#\[\]$#', $key, $m))
+                {
+                    // form 이 바뀌어야만 성립한다. 그러므로 지원하지 않음을 밝히고 form 자체를 수정하게 권고한다.
+                    throw new \Limepie\Exception('[] multiple은 lang옵션을 지원하지 않습니다. group 하위로 옮기세요.');
+                    // $rekey = rtrim($key, '[]');
 
-                if ('append' === $value['lang']) {
-                    $default2['rules']['required'] = false;
+                    // pr($key, $value);
+
+                    // $default = $value;
+                    // unset($default['lang'], $default['class'], $default['default'], $default['multiple']);
+
+                    // $value = [
+                    //     //'label'      => $value['label'],
+                    //     'type'       => 'group',
+                    //     'multiple'   => true,
+                    //     'class'      => $value['class'] ?? '',
+                    //     //'description' => $value['description'],
+                    //     'properties' => [
+                    //         'default' => $default,
+                    //         'langs' => [
+                    //             'label' => $value['label'],
+                    //             'type' => 'group',
+                    //             'properties' => [
+                    //                 'ko' => ['label' => \Limepie\__('core', '한국어'), 'prepend' => '<i class="flag-icon flag-icon-kr"></i>'] + $default2,
+                    //                 'en' => ['label' => \Limepie\__('core', '영어'), 'prepend' => '<i class="flag-icon flag-icon-us"></i>'] + $default2,
+                    //                 'zh' => ['label' => \Limepie\__('core', '중국어'), 'prepend' => '<i class="flag-icon flag-icon-cn"></i>'] + $default2,
+                    //                 'ja' => ['label' => \Limepie\__('core', '일본어'), 'prepend' => '<i class="flag-icon flag-icon-jp"></i>'] + $default2,
+
+                    //             ]
+                    //         ]
+                    //     ],
+                    // ];
+                    //unset($value['lang']);
+                    //pr($value);
+                    $return[$key] = \Limepie\refparse($value, $basepath);
+                    // if ('append' === $value['lang']) {
+                    //     $return[$key] = \Limepie\refparse($value, $basepath);
+                    // }
+                    // $default = $value;
+                    // unset($default['lang'], $default['class'], $default['description'], $default['default']);
+                    // $default2 = $default;
+
+                    // if ('append' === $value['lang']) {
+                    //     $default2['rules']['required'] = false;
+                    // }
+                    // $value = [
+                    //     'label'      => $value['label'],
+                    //     'type'       => 'group',
+                    //     'class'      => $value['class'] ?? '',
+                    //     'properties' => [
+                    //         'ko' => ['label' => \Limepie\__('core', '한국어'), 'prepend' => '<i class="flag-icon flag-icon-kr"></i>'] + $default2,
+                    //         'en' => ['label' => \Limepie\__('core', '영어'), 'prepend' => '<i class="flag-icon flag-icon-us"></i>'] + $default2,
+                    //         'zh' => ['label' => \Limepie\__('core', '중국어'), 'prepend' => '<i class="flag-icon flag-icon-cn"></i>'] + $default2,
+                    //         'ja' => ['label' => \Limepie\__('core', '일본어'), 'prepend' => '<i class="flag-icon flag-icon-jp"></i>'] + $default2,
+                    //     ],
+                    // ];
+                    // $return[$key . '_langs'] = \Limepie\refparse($value, $basepath);
+                    // pr($return);
+
+                } else {
+                    if ('append' === $value['lang']) {
+                        $return[$key] = \Limepie\refparse($value, $basepath);
+                    }
+                    $default = $value;
+                    unset($default['lang'], $default['class'], $default['description'], $default['default']);
+                    $default2 = $default;
+
+                    if ('append' === $value['lang']) {
+                        $default2['rules']['required'] = false;
+                    }
+                    //unset($default2['label']);
+                    $value = [
+                        'label'      => ($value['label'] ?? '').' - '.\Limepie\__('core', '언어팩'),
+                        'type'       => 'group',
+                        'class'      => $value['class'] ?? '',
+                        'properties' => [
+                            'ko' => ['label' => \Limepie\__('core', '한국어'), 'prepend' => '<i class="flag-icon flag-icon-kr"></i>'] + $default2,
+                            'en' => ['label' => \Limepie\__('core', '영어'), 'prepend' => '<i class="flag-icon flag-icon-us"></i>'] + $default2,
+                            'zh' => ['label' => \Limepie\__('core', '중국어'), 'prepend' => '<i class="flag-icon flag-icon-cn"></i>'] + $default2,
+                            'ja' => ['label' => \Limepie\__('core', '일본어'), 'prepend' => '<i class="flag-icon flag-icon-jp"></i>'] + $default2,
+                        ],
+                    ];
+                    $return[$key . '_langs'] = \Limepie\refparse($value, $basepath);
                 }
-                $value = [
-                    'label'      => $value['label'],
-                    'type'       => 'group',
-                    'class'      => $value['class'] ?? '',
-                    'properties' => [
-                        'ko' => ['label' => \Limepie\__('core', '한국어'), 'prepend' => '<i class="flag-icon flag-icon-kr"></i>'] + $default2,
-                        'en' => ['label' => \Limepie\__('core', '영어'), 'prepend' => '<i class="flag-icon flag-icon-us"></i>'] + $default2,
-                        'zh' => ['label' => \Limepie\__('core', '중국어'), 'prepend' => '<i class="flag-icon flag-icon-cn"></i>'] + $default2,
-                        'ja' => ['label' => \Limepie\__('core', '일본어'), 'prepend' => '<i class="flag-icon flag-icon-jp"></i>'] + $default2,
-                    ],
-                ];
-                $return[$key . '_langs'] = \Limepie\refparse($value, $basepath);
             } else {
                 $return[$key] = \Limepie\refparse($value, $basepath);
             }
