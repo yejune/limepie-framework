@@ -29,7 +29,7 @@ EOT;
             }
 
             $html .= <<<EOT
-            <img src='{$data['url']}' class='form-preview-image clone-element'>
+            <div class='form-preview clone-element'><img src='{$data['url']}' class='form-preview-image'></div>
 EOT;
             $button = <<<EOT
             <button class="btn btn-filesearch-text" type="button"><span data-feather="search"></span></button>
