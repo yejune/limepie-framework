@@ -232,6 +232,7 @@ function refparse($arr = [], $basepath = '') : array
 
     foreach ($arr ?? [] as $key => $value) {
         if (true === \in_array($key, ['$after', '$before', '$change'], true)) {
+
         } elseif ('$ref' === $key) {
             if (false === \is_array($value)) {
                 $value = [$value];
@@ -261,7 +262,6 @@ function refparse($arr = [], $basepath = '') : array
                             $path = $basepath . '/' . $path . '';
                         }
                     }
-                    //\pr($path);
                     $yml = \Limepie\yml_parse_file($path);
 
                     $yml2 = $yml;
@@ -282,6 +282,7 @@ function refparse($arr = [], $basepath = '') : array
                     $data = \array_merge($data, $yml2);
                 }
             }
+
             $yml = \Limepie\refparse($data, $basepath);
 
             $return = \array_merge($return, $yml);
@@ -358,8 +359,22 @@ function refparse($arr = [], $basepath = '') : array
                         $default2['rules']['required'] = false;
                     }
                     //unset($default2['label']);
+
+                    if(true === is_array($value['label'])) {
+                        // TODO: 라벨이 배열일 경우 랭귀지 팩이 포함되어 있다. 이경우 배열 전체를 루프돌면서 언어팩이라는 글짜를 언어별로 추가해줘야 한다. 지금은 랭귀지팩의 특정언어를 선택해서 가져올수 없으므로 개발을 중단하고 현재의 언어에 대해서만 처리하는 형태로 완료한다.
+
+                        // foreach($value['label'] as $langKey => &$langValue) {
+                        //     $langValue .= ' - '.getLang....
+                        // }
+
+                        $label = $value['label'][\Limepie\get_language()] ?? '';
+                    } else {
+                        $label = $value['label'];
+                    }
+
+
                     $value = [
-                        'label'      => ($value['label'] ?? '').' - '.\Limepie\__('core', '언어팩'),
+                        'label'      => ($label ?? '').' - '.\Limepie\__('core', '언어팩'),
                         'type'       => 'group',
                         'class'      => $value['class'] ?? '',
                         'properties' => [
@@ -409,7 +424,6 @@ function yml_parse_file($file, \Closure $callback = null)
         $spec     = \yaml_parse_file($filepath);
 
         $data = \Limepie\refparse($spec, $basepath);
-
         if (true === isset($callback) && $callback) {
             return $callback($data);
         }
