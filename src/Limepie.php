@@ -232,7 +232,6 @@ function refparse($arr = [], $basepath = '') : array
 
     foreach ($arr ?? [] as $key => $value) {
         if (true === \in_array($key, ['$after', '$before', '$change'], true)) {
-
         } elseif ('$ref' === $key) {
             if (false === \is_array($value)) {
                 $value = [$value];
@@ -288,8 +287,7 @@ function refparse($arr = [], $basepath = '') : array
             $return = \array_merge($return, $yml);
         } elseif (true === \is_array($value)) {
             if (true === isset($value['lang'])) {
-                if(1 === preg_match('#\[\]$#', $key, $m))
-                {
+                if (1 === \preg_match('#\[\]$#', $key, $m)) {
                     // form 이 바뀌어야만 성립한다. 그러므로 지원하지 않음을 밝히고 form 자체를 수정하게 권고한다.
                     throw new \Limepie\Exception('[] multiple은 lang옵션을 지원하지 않습니다. group 하위로 옮기세요.');
                     // $rekey = rtrim($key, '[]');
@@ -323,7 +321,7 @@ function refparse($arr = [], $basepath = '') : array
                     //unset($value['lang']);
                     //pr($value);
                     $return[$key] = \Limepie\refparse($value, $basepath);
-                    // if ('append' === $value['lang']) {
+                // if ('append' === $value['lang']) {
                     //     $return[$key] = \Limepie\refparse($value, $basepath);
                     // }
                     // $default = $value;
@@ -346,13 +344,12 @@ function refparse($arr = [], $basepath = '') : array
                     // ];
                     // $return[$key . '_langs'] = \Limepie\refparse($value, $basepath);
                     // pr($return);
-
                 } else {
                     if ('append' === $value['lang']) {
                         $return[$key] = \Limepie\refparse($value, $basepath);
                     }
                     $default = $value;
-                    unset($default['lang'], $default['class'], $default['description'], $default['default']);
+                    unset($default['lang'], $default['class'],$default['style'], $default['description'], $default['default']);
                     $default2 = $default;
 
                     if ('append' === $value['lang']) {
@@ -360,7 +357,7 @@ function refparse($arr = [], $basepath = '') : array
                     }
                     //unset($default2['label']);
 
-                    if(true === is_array($value['label'])) {
+                    if (true === \is_array($value['label'])) {
                         // TODO: 라벨이 배열일 경우 랭귀지 팩이 포함되어 있다. 이경우 배열 전체를 루프돌면서 언어팩이라는 글짜를 언어별로 추가해줘야 한다. 지금은 랭귀지팩의 특정언어를 선택해서 가져올수 없으므로 개발을 중단하고 현재의 언어에 대해서만 처리하는 형태로 완료한다.
 
                         // foreach($value['label'] as $langKey => &$langValue) {
@@ -372,9 +369,8 @@ function refparse($arr = [], $basepath = '') : array
                         $label = $value['label'];
                     }
 
-
                     $value = [
-                        'label'      => ($label ?? '').' - '.\Limepie\__('core', '언어팩'),
+                        'label'      => ($label ?? '') . ' - ' . \Limepie\__('core', '언어팩'),
                         'type'       => 'group',
                         'class'      => $value['class'] ?? '',
                         'properties' => [
@@ -424,6 +420,7 @@ function yml_parse_file($file, \Closure $callback = null)
         $spec     = \yaml_parse_file($filepath);
 
         $data = \Limepie\refparse($spec, $basepath);
+
         if (true === isset($callback) && $callback) {
             return $callback($data);
         }
@@ -1000,7 +997,7 @@ function decimal($number) : float
 
     // return $tmp->trim();
 
-    if (0 < \strlen((string)$number)) {
+    if (0 < \strlen((string) $number)) {
         $parts  = \explode('.', $number);
         $result = $parts[0];
 

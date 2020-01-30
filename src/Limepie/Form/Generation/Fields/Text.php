@@ -14,9 +14,14 @@ class Text extends \Limepie\Form\Generation\Fields
         $default  = $property['default'] ?? '';
         $default  = \is_array($default) ? '' : $default;
         $readonly = '';
+        $style    = '';
 
         if (isset($property['readonly']) && $property['readonly']) {
             $readonly = ' readonly="readonly"';
+        }
+
+        if (isset($property['style']) && $property['style']) {
+            $style = ' style="' . $property['style'] . '"';
         }
 
         $disabled = '';
@@ -58,7 +63,7 @@ EOD;
         $html = <<<EOT
         <div class="input-group">
         {$prepend}
-        <input type="text" class="form-control{$elementClass}" name="{$key}" value="{$value}" data-default="{$default}"${readonly}${disabled}{$placeholder} />
+        <input type="text"${style} class="form-control{$elementClass}" name="{$key}" value="{$value}" data-default="{$default}"${readonly}${disabled}{$placeholder} />
         {$append}
         </div>
 EOT;
