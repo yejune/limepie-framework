@@ -524,21 +524,21 @@ function array_mix(array $a, array $b) : array
  *
  * @return string
  */
-function time_ago($time, int $depth = 1) : string
+function time_ago($time, int $depth = 3) : string
 {
     if (true === \is_string($time)) {
         $time = \strtotime($time);
     }
     $time   = \time() - $time;
-    $time   = (1 > $time) ? 1 : $time;
+    $time   = (1 > $time) ? $time * -1 : $time;
     $tokens = [
         31536000 => 'year',
         2592000  => 'month',
         604800   => 'week',
         86400    => 'day',
         3600     => 'hour',
-        60       => 'min', //ute
-        1        => 'sec', //ond
+        60       => 'min',
+        1        => 'sec',
     ];
     $parts = [];
 
@@ -552,6 +552,31 @@ function time_ago($time, int $depth = 1) : string
         if (\count($parts) === $depth) {
             return \implode(' ', $parts);
         }
+        $time -= ($unit * $numberOfUnits);
+    }
+
+    return \implode(' ', $parts);
+}
+
+function day_ago($time) : string
+{
+    if (true === \is_string($time)) {
+        $time = \strtotime($time);
+    }
+    $time   = \time() - $time;
+    $time   = (1 > $time) ? $time * -1 : $time;
+    $tokens = [
+        86400 => 'day',
+    ];
+    $parts = [];
+
+    foreach ($tokens as $unit => $text) {
+        if ($time < $unit) {
+            continue;
+        }
+        $numberOfUnits = \floor($time / $unit);
+        $parts[]       = $numberOfUnits; // . ' ' . $text . ((1 < $numberOfUnits) ? 's' : '');
+
         $time -= ($unit * $numberOfUnits);
     }
 
@@ -1106,4 +1131,15 @@ function http_build_query(array $data = [], $glue = '=', $separator = '&')
     }
 
     return \implode($separator, $return);
+}
+
+function nest(array $flat, $value = []) : array
+{
+    if (!$flat) {
+        return $value;
+    }
+    $key = $flat[\key($flat)];
+    \array_splice($flat, 0, 1);
+
+    return [$key => \Limepie\nest($flat, $value)];
 }

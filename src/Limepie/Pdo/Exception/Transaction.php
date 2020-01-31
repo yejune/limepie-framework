@@ -18,7 +18,6 @@ class Transaction extends \Limepie\Exception
     public function currentTrace()
     {
         $trace = $this->getTrace();
-
         foreach ($trace as $row) {
             if ('Limepie\Pdo\Mysql' !== $row['class']) {
                 return $row;

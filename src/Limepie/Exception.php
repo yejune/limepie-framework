@@ -27,40 +27,39 @@ class Exception extends \Exception
         }
     }
 
-    public function __toString()
+    public function x__toString()
     {
+        $s = \opcache_get_status();
 
-$s = opcache_get_status();
+        // echo '<pre>';
+        // print_r($s);
+        // \print_r(\get_included_files());
 
-// echo '<pre>';
-// print_r($s);
-// \print_r(\get_included_files());
-
-// echo '</pre>';
+        // echo '</pre>';
         //pr($this);
-       // if (false === \strpos($this->getFile(), '/limepie-framework/src/')) {
-            $traces = $this->getTraces();
-//pr($traces);
-            foreach ($traces as $trace) {
-                if (true === isset($trace['file'])) {
-                    if (false === \strpos($trace['file'], '/limepie-framework/src/')) {
-                        $filename = $trace['file'];
-                        $line     = $trace['line'];
+        // if (false === \strpos($this->getFile(), '/limepie-framework/src/')) {
+        $traces = $this->getTraces();
 
-                        if (true === \Limepie\is_cli()) {
-                            $message = "{$this->code}: {$this->message} in {$filename} on line {$line}";
-                        } elseif (true === \Limepie\is_ajax()) {
-                            $message = \json_encode([
-                                'message' => "{$this->code}: {$this->message} in {$filename} on line {$line}",
-                            ], \JSON_UNESCAPED_UNICODE);
-                        } else {
-                            $message = "{$this->code}: {$this->message} in <b>{$filename}</b> on line <b>{$line}</b>\n\n";
-                        }
+        foreach ($traces as $trace) {
+            if (true === isset($trace['file'])) {
+                if (false === \strpos($trace['file'], '/limepie-framework/src/')) {
+                    $filename = $trace['file'];
+                    $line     = $trace['line'];
 
-                        break;
+                    if (true === \Limepie\is_cli()) {
+                        $message = "{$this->code}: {$this->message} in {$filename} on line {$line}";
+                    } elseif (true === \Limepie\is_ajax()) {
+                        $message = \json_encode([
+                            'message' => "{$this->code}: {$this->message} in {$filename} on line {$line}",
+                        ], \JSON_UNESCAPED_UNICODE);
+                    } else {
+                        $message = "{$this->code}: {$this->message} in <b>{$filename}</b> on line <b>{$line}</b>\n\n";
                     }
+
+                    break;
                 }
             }
+        }
         // } else {
         //     $filename = $this->file;
         //     $line     = $this->line;

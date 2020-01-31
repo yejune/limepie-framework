@@ -30,8 +30,14 @@ class Checkbox extends \Limepie\Form\Generation\Fields
             $onclick = 'onclick="' . \trim(\addcslashes($property['onclick'], '"')) . '"';
         }
 
+        $style = '';
+
+        if (isset($property['style']) && $property['style']) {
+            $style = ' style="'.$property['style'].'"';
+        }
+
         $html = <<<EOT
-        <input type="checkbox" class="form-control" name="{$key}" value="1" {$checked} ${onclick} /> {$title}
+        <div><input type="checkbox" class="xform-control" name="{$key}" value="1" {$checked} ${onclick}{$style} /> <span>{$title}</span></div>
 
 EOT;
 

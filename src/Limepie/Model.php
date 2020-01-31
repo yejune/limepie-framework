@@ -165,14 +165,26 @@ class Model implements \Iterator, \ArrayAccess, \Countable
                 if (true === isset($this->dataTypes[$field])) {
                     switch ($this->dataTypes[$field]) {
                         case 'serialize':
-                            $value = \unserialize($value);
+                            if($value) {
+                                $value = \unserialize($value);
+                            } else {
+                                $value = [];
+                            }
                             break;
                         case 'json':
-                            $value = \json_decode($value, true);
+                            if($value) {
+                                $value = \json_decode($value, true);
+                            } else {
+                                $value = [];
+                            }
                             break;
                         case 'yml':
                         case 'yaml':
-                            $value = \yaml_parse($value);
+                            if($value) {
+                                $value = \yaml_parse($value);
+                            } else {
+                                $value = [];
+                            }
                             break;
                     }
                 }
@@ -1278,7 +1290,14 @@ class Model implements \Iterator, \ArrayAccess, \Countable
                 ],
             ];
         } elseif (0 === \strpos($key, 'lt_')) {
-            $condition = "`{$this->tableName}`.`{$whereKey2}` < :{$whereKey}";
+            $this->bindcount++;
+
+            $this->conditions[] = [
+                'string' => $whereKey . ' < :' . $whereKey . $this->bindcount,
+                'bind'   => [
+                    $whereKey . $this->bindcount => $arguments[0],
+                ],
+            ];
         } elseif (0 === \strpos($key, 'ge_')) {
             $this->bindcount++;
 
@@ -1289,11 +1308,32 @@ class Model implements \Iterator, \ArrayAccess, \Countable
                 ],
             ];
         } elseif (0 === \strpos($whereKey, 'le_')) {
-            $condition = "`{$this->tableName}`.`{$whereKey2}` <= :{$whereKey}";
+            $this->bindcount++;
+
+            $this->conditions[] = [
+                'string' => $whereKey . ' <= :' . $whereKey . $this->bindcount,
+                'bind'   => [
+                    $whereKey . $this->bindcount => $arguments[0],
+                ],
+            ];
         } elseif (0 === \strpos($whereKey, 'eq_')) {
-            $condition = "`{$this->tableName}`.`{$whereKey2}` = :{$whereKey}";
+            $this->bindcount++;
+
+            $this->conditions[] = [
+                'string' => $whereKey . ' = :' . $whereKey . $this->bindcount,
+                'bind'   => [
+                    $whereKey . $this->bindcount => $arguments[0],
+                ],
+            ];
         } elseif (0 === \strpos($whereKey, 'ne_')) {
-            $condition = "`{$this->tableName}`.`{$whereKey2}` != :{$whereKey}";
+            $this->bindcount++;
+
+            $this->conditions[] = [
+                'string' => $whereKey . ' != :' . $whereKey . $this->bindcount,
+                'bind'   => [
+                    $whereKey . $this->bindcount => $arguments[0],
+                ],
+            ];
         } else {
             $this->bindcount++;
 
@@ -1517,7 +1557,12 @@ class Model implements \Iterator, \ArrayAccess, \Countable
                 if (true === \is_array($attribute)) {
                     if (0 < \count($attribute)) {
                         foreach ($attribute as $k2 => $v2) {
-                            $data[ $key ][$k2] = $v2->objectToArray();
+
+                            if (true === \is_object($v2)) {
+                                $data[ $key ][$k2] = $v2->objectToArray();
+                            }else {
+                                $data[ $key ][$k2] = $v2;
+                            }
                         }
                     } else {
                         $data [ $key ] = [];

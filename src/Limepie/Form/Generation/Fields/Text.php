@@ -6,6 +6,9 @@ class Text extends \Limepie\Form\Generation\Fields
 {
     public static function write($key, $property, $value)
     {
+        if(true === is_array($value)) {
+            $value = '';
+        }
         $value = \htmlspecialchars((string) $value);
 
         if (0 === \strlen($value) && true === isset($property['default']) && false === \is_array($property['default'])) {
@@ -14,12 +17,12 @@ class Text extends \Limepie\Form\Generation\Fields
         $default  = $property['default'] ?? '';
         $default  = \is_array($default) ? '' : $default;
         $readonly = '';
-        $style    = '';
 
         if (isset($property['readonly']) && $property['readonly']) {
             $readonly = ' readonly="readonly"';
         }
 
+        $style    = '';
         if (isset($property['style']) && $property['style']) {
             $style = ' style="' . $property['style'] . '"';
         }
@@ -63,7 +66,7 @@ EOD;
         $html = <<<EOT
         <div class="input-group">
         {$prepend}
-        <input type="text"${style} class="form-control{$elementClass}" name="{$key}" value="{$value}" data-default="{$default}"${readonly}${disabled}{$placeholder} />
+        <input type="text" class="form-control{$elementClass}" name="{$key}" value="{$value}" data-default="{$default}"${readonly}${disabled}{$placeholder}{$style} />
         {$append}
         </div>
 EOT;
