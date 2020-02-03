@@ -1042,7 +1042,7 @@ function number_format($number)
 {
     //$stripzero = sprintf('%g',$number);
     if (0 < \strlen((string) $number)) {
-        $parts  = \explode('.', $number);
+        $parts  = \explode('.', (string) $number);
         $result = \number_format((int) $parts[0]);
 
         if (true === isset($parts[1])) {

@@ -980,30 +980,34 @@ class Compiler
                     break;
                 case 'comma':
                     $last_stat = \array_pop($stat);
+                    if($last_stat) {
+                        if ($last_stat['name'] && 'left_bracket' === $last_stat['name'] && 0 < $last_stat['key']) {
+                            // ][ ,] 면 배열키이므로 ,가 있으면 안됨
+                            if (\in_array($token[$last_stat['key'] - 1]['name'], ['right_bracket', 'string'], true)) {
+                                throw new Compiler\Exception(__LINE__ . ' parse error : file ' . $this->filename . ' line ' . $line . ' ' . $prev['org'] . $current['org']);
+                            }
+                        }
 
-                    if ($last_stat['name'] && 'left_bracket' === $last_stat['name'] && 0 < $last_stat['key']) {
-                        // ][ ,] 면 배열키이므로 ,가 있으면 안됨
-                        if (\in_array($token[$last_stat['key'] - 1]['name'], ['right_bracket', 'string'], true)) {
+                        // 배열이나 인자 속이 아니면 오류
+                        if (false === \in_array($last_stat['name'], ['left_parenthesis', 'left_bracket'], true)) {
+                            if (true === $this->debug) {
+                                \pr($xpr, $prev, $current, __LINE__);
+                            }
+                            return false;
+
                             throw new Compiler\Exception(__LINE__ . ' parse error : file ' . $this->filename . ' line ' . $line . ' ' . $prev['org'] . $current['org']);
                         }
-                    }
 
-                    // 배열이나 인자 속이 아니면 오류
-                    if (false === \in_array($last_stat['name'], ['left_parenthesis', 'left_bracket'], true)) {
-                        if (true === $this->debug) {
-                            \pr($xpr, $prev, $current, __LINE__);
+                        $stat[] = $last_stat;
+
+                        if (false === \in_array($prev['name'], ['quote', 'string', 'number', 'string_number', 'right_parenthesis', 'right_bracket'], true)) {
+                            throw new Compiler\Exception(__LINE__ . ' parse error : file ' . $this->filename . ' line ' . $line . ' ' . $prev['org'] . $current['org']);
                         }
+
+                        $xpr .= $current['value'];
+                    } else {
                         return false;
-
-                        throw new Compiler\Exception(__LINE__ . ' parse error : file ' . $this->filename . ' line ' . $line . ' ' . $prev['org'] . $current['org']);
                     }
-
-                    $stat[] = $last_stat;
-
-                    if (false === \in_array($prev['name'], ['quote', 'string', 'number', 'string_number', 'right_parenthesis', 'right_bracket'], true)) {
-                        throw new Compiler\Exception(__LINE__ . ' parse error : file ' . $this->filename . ' line ' . $line . ' ' . $prev['org'] . $current['org']);
-                    }
-                    $xpr .= $current['value'];
 
                     break;
             }
