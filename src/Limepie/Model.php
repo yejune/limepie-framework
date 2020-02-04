@@ -498,10 +498,19 @@ class Model implements \Iterator, \ArrayAccess, \Countable
                         //         $key.$this->bindcount => $arguments[$index]
                         //     ]
                         // ];
+                        if($arguments[$index] === null) {
+                            $conds[] = "`{$this->tableName}`." . '`' . $key . '` is null';
 
-                        $conds[] = "`{$this->tableName}`." . '`' . $key . '`' . ' = :' . $key;
+                        } else {
+                            $conds[] = "`{$this->tableName}`." . '`' . $key . '`' . ' = :' . $key;
+                        }
                     }
-                    $binds[':' . $key] = $arguments[$index];
+
+
+                    if (null === $arguments[$index]) {
+                    } else {
+                        $binds[':' . $key] = $arguments[$index];
+                    }
                 }
             }
             $condition = \implode(' AND ', $conds);
@@ -533,12 +542,20 @@ class Model implements \Iterator, \ArrayAccess, \Countable
                 } elseif (0 === \strpos($whereKey, 'ne_')) {
                     $condition = "`{$this->tableName}`.`{$whereKey2}` != :{$whereKey}";
                 } else {
-                    $condition = "`{$this->tableName}`.`{$whereKey}` = :{$whereKey}";
+                    if(null === $whereValue) {
+                        $condition = "`{$this->tableName}`.`{$whereKey}` is null";
+                    } else {
+                        $condition = "`{$this->tableName}`.`{$whereKey}` = :{$whereKey}";
+                    }
                 }
 
-                $binds = [
-                    ':' . $whereKey => $whereValue,
-                ];
+                if (null === $whereValue) {
+                    $binds = [];
+                } else {
+                    $binds = [
+                        ':' . $whereKey => $whereValue,
+                    ];
+                }
             }
         }
 
