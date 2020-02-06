@@ -123,7 +123,7 @@ class Cookie
         $key    = self::sethost($key);
         $domain = true === (null === $domain) ? self::$domain : $domain;
 
-        if (true === \sset($_COOKIE[$key])) {
+        if (true === isset($_COOKIE[$key])) {
             unset($_COOKIE[$key], $_REQUEST[$key]);
             $_COOKIE[$key] = $_REQUEST[$key] = null;
 
