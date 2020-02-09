@@ -19,12 +19,13 @@ EOT;
                     $html .= <<<EOT
                     <input type="text" class='form-control-file form-control-filetext form-control-image'  name="{$key}[{$key1}]" value="{$value1}" accept="{$accept}" />
                     EOT;
-
                 } else {
-                    $html .= <<<EOT
-                        <input type="hidden" class="clone-element" name="{$key}[{$key1}]" value="{$value1}" />
-                    EOT;
-
+                    if ('tmp_name' === $key1) {
+                    } else {
+                        $html .= <<<EOT
+                            <input type="hidden" class="clone-element" name="{$key}[{$key1}]" value="{$value1}" />
+                        EOT;
+                    }
                 }
             }
 
