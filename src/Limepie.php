@@ -650,7 +650,7 @@ function is_file_array($array = [], $isMulti = false) : bool
         if (
             true === isset($array['name'])
             && true === isset($array['type'])
-            && true === isset($array['tmp_name'])
+            //&& true === isset($array['tmp_name'])
             && true === isset($array['error'])
             && true === isset($array['size'])
         ) {
@@ -662,7 +662,7 @@ function is_file_array($array = [], $isMulti = false) : bool
                 if (
                     true === isset($file['name'])
                     && true === isset($file['type'])
-                    && true === isset($file['tmp_name'])
+                    //&& true === isset($file['tmp_name'])
                     && true === isset($file['error'])
                     && true === isset($file['size'])
                 ) {
@@ -1142,4 +1142,101 @@ function nest(array $flat, $value = []) : array
     \array_splice($flat, 0, 1);
 
     return [$key => \Limepie\nest($flat, $value)];
+}
+
+function inflate($arr, $divider_char = '/')
+{
+    if (false === \is_array($arr)) {
+        return false;
+    }
+
+    $split = '/' . \preg_quote($divider_char, '/') . '/';
+
+    $ret = [];
+
+    foreach ($arr as $key => $val) {
+        $parts    = \preg_split($split, $key, -1, \PREG_SPLIT_NO_EMPTY);
+        $leafpart = \array_pop($parts);
+        $parent   = &$ret;
+
+        foreach ($parts as $part) {
+            if (false === isset($parent[$part])) {
+                $parent[$part] = [];
+            } elseif (false === \is_array($parent[$part])) {
+                $parent[$part] = [];
+            }
+            $parent = &$parent[$part];
+        }
+
+        if (empty($parent[$leafpart])) {
+            $parent[$leafpart] = $val;
+        }
+    }
+
+    return $ret;
+}
+
+function flatten($arr, $base = '', $divider_char = '/')
+{
+    $ret = [];
+
+    if (true === \is_array($arr)) {
+        $index = -1;
+
+        foreach ($arr as $k => $v) {
+            $index++;
+
+            if (1 === \preg_match('#^__([^_]{13})__$#', $k, $m)) {
+                $k = $index;
+            }
+
+            if (true === \is_array($v)) {
+                $tmp_array = \Limepie\flatten($v, $base . $k . $divider_char, $divider_char);
+                $ret       = \array_merge($ret, $tmp_array);
+            } else {
+                $ret[$base . $k] = $v;
+            }
+        }
+    }
+
+    return $ret;
+}
+
+function flatten_diff($arraya, $arrayb) {
+    $old = $arraya = \Limepie\flatten($arraya);
+    $new = $arrayb = \Limepie\flatten($arrayb);
+
+    $diff = [];
+    foreach($arraya as $key1 => $value1) {
+        foreach($arrayb as $key2 => $value2) {
+            if($key1 == $key2) {
+                if($value1 == $value2) {
+                    unset($old[$key1]);
+                    unset($new[$key2]);
+                } else {
+                    $diff[$key1] = [
+                        'old' => $value1,
+                        'new' => $value2
+                    ];
+                    unset($old[$key1]);
+                    unset($new[$key2]);
+                }
+            }
+        }
+    }
+    if($old) {
+        foreach($old as $key => $value) {
+            $diff[$key] = [
+                'old' => $value,
+            ];
+        }
+    }
+    if($new) {
+        foreach($new as $key => $value) {
+            $diff[$key] = [
+                'new' => $value
+            ];
+        }
+    }
+    return [$old, $new, $diff];
 }
