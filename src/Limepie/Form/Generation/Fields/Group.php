@@ -410,9 +410,13 @@ EOD;
             if (true === isset($specs['fieldset_class'])) {
                 $fieldsetClass = ' ' . $specs['fieldset_class'];
             }
+            $style = "";
+            if(true === isset($specs['style'])) {
+                $style = "style='".$specs['style']."'";
+            }
 
             $html = <<<EOT
-<div class='fieldset{$fieldsetClass} '>
+<div class='fieldset{$fieldsetClass} ' {$style}>
     {$innerhtml}
 </div>
 {$script}
@@ -493,6 +497,7 @@ EOT;
             $multipleHtml = true === isset($propertyValue['multiple']) ? static::getMultipleHtml($parentId) : '';
             $titleHtml    = '<label>' . $language . '</label>';
 
+
             if ('hidden' === $propertyValue['type']) {
                 $innerhtml .= <<<EOT
                     {$elements}
@@ -507,9 +512,13 @@ EOT;
             }
             unset($parentId);
         }
+        $style = "";
+        if(true === isset($propertyValue['style'])) {
+            $style = "style='".$propertyValue['style']."'";
+        }
 
         $html = <<<EOT
-<div class='fieldset'>
+<div class='fieldset'  {$style}>
     {$innerhtml}
 </div>
 
