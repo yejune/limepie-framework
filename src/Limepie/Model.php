@@ -1040,7 +1040,11 @@ class Model implements \Iterator, \ArrayAccess, \Countable
 
         foreach ($this->selectFields as $column => $alias) {
             if (true === \is_numeric($column)) {
-                $fields[] = "`{$this->tableName}`." . '`' . $alias . '`';
+                if($alias == 'ip') {
+                    $fields[] = "inet6_ntoa(`{$this->tableName}`." . '`' . $alias . '`) `' . $alias . '`';
+                } else {
+                    $fields[] = "`{$this->tableName}`." . '`' . $alias . '`';
+                }
             } else {
                 $fields[] = $column . ' AS `' . $alias . '`';
             }
@@ -1212,9 +1216,9 @@ class Model implements \Iterator, \ArrayAccess, \Countable
         $this->condition = $condition;
         $this->query     = $sql;
         $this->binds     = $binds;
-
+pr($sql);
         $data = $this->getConnect()->gets($sql, $binds);
-
+pr($data);
         $class = \get_called_class();
 
         $attributes = [];
