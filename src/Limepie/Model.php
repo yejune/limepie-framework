@@ -834,6 +834,12 @@ class Model implements \Iterator, \ArrayAccess, \Countable
                         $binds[':' . $field] = $value;
                         $values[]            = ':' . $field;
                     // }
+                } else {
+                    if($field == 'ip') {
+                        $fields[]            = '`' . $field . '`';
+                        $binds[':' . $field] = $_SERVER['REMOTE_ADDR'];
+                        $values[]            = 'inet6_aton(:' . $field.')';
+                    }
                 }
             }
         }
@@ -880,33 +886,44 @@ class Model implements \Iterator, \ArrayAccess, \Countable
         foreach ($this->allFields as $field) {
             if ($this->sequenceName === $field) {
             } else {
-                $value = $this->attributes[$field];
 
-                if (true === isset($this->dataTypes[$field])) {
-                    switch ($this->dataTypes[$field]) {
-                        case 'serialize':
-                            $value = \serialize($value);
-                            break;
-                        case 'json':
-                            $value = \json_encode($value);
-                            break;
-                        case 'yml':
-                        case 'yaml':
-                            $value = \yaml_emit($value);
-                            break;
+                if (true === isset($this->attributes[$field])) {
+                    $value = $this->attributes[$field];
+
+                    if (true === isset($this->dataTypes[$field])) {
+                        switch ($this->dataTypes[$field]) {
+                            case 'serialize':
+                                $value = \serialize($value);
+
+                                break;
+                            case 'json':
+                                $value = \json_encode($value);
+
+                                break;
+                            case 'yml':
+                            case 'yaml':
+                                $value = \yaml_emit($value);
+
+                                break;
+                        }
                     }
-                }
 
-                // if (true === \is_array($value)) {
-                //     $fields[] = "`{$this->tableName}`." . '`' . $field . '` = ' . $value[0];
+                    // if (true === \is_array($value)) {
+                    //     $fields[] = "`{$this->tableName}`." . '`' . $field . '` = ' . $value[0];
 
-                //     foreach ($value[1] as $vKey => $vValue) {
-                //         $binds[':' . $vKey] = $vValue;
-                //     }
-                // } else {
+                    //     foreach ($value[1] as $vKey => $vValue) {
+                    //         $binds[':' . $vKey] = $vValue;
+                    //     }
+                    // } else {
                     $fields[]            = "`{$this->tableName}`." . '`' . $field . '` = :' . $field;
                     $binds[':' . $field] = $value;
-                // }
+                    // }
+                } else {
+                    if($field == 'ip') {
+                        $fields[]            = "`{$this->tableName}`." . '`' . $field . '` = inet6_aton(:' . $field.')';
+                        $binds[':' . $field] = $_SERVER['REMOTE_ADDR'];
+                    }
+                }
             }
         }
         $field = \implode(', ', $fields);
