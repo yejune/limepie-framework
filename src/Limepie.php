@@ -583,6 +583,27 @@ function day_ago($time) : string
     return \implode(' ', $parts);
 }
 
+function ago($enddate, $format = '$d day $H:$i:$s')
+{
+    if (true === \is_string($enddate)) {
+        $enddate = \strtotime($enddate);
+    }
+    $timediffer = $enddate - \time();
+    $day        = \floor(($timediffer) / (60 * 60 * 24));
+    $hour       = \floor(($timediffer - ($day * 60 * 60 * 24)) / (60 * 60));
+    $minute     = \floor(($timediffer - ($day * 60 * 60 * 24) - ($hour * 60 * 60)) / (60));
+    $second     = $timediffer - ($day * 60 * 60 * 24) - ($hour * 60 * 60) - ($minute * 60);
+
+    if (1 === \strlen((string)$minute)) {
+        $minute = '0' . $minute;
+    }
+
+    if (1 === \strlen((string)$second)) {
+        $second = '0' . $second;
+    }
+
+    return $day . '일하고, ' . $hour . ':' . $minute . ':' . $second . '';
+}
 /**
  * 숫자를 읽기쉬운 문자열로 변환
  *
@@ -1202,21 +1223,23 @@ function flatten($arr, $base = '', $divider_char = '/')
     return $ret;
 }
 
-function flatten_diff($arraya, $arrayb) {
+function flatten_diff($arraya, $arrayb)
+{
     $old = $arraya = \Limepie\flatten($arraya);
     $new = $arrayb = \Limepie\flatten($arrayb);
 
     $diff = [];
-    foreach($arraya as $key1 => $value1) {
-        foreach($arrayb as $key2 => $value2) {
-            if($key1 == $key2) {
-                if($value1 == $value2) {
+
+    foreach ($arraya as $key1 => $value1) {
+        foreach ($arrayb as $key2 => $value2) {
+            if ($key1 === $key2) {
+                if ($value1 === $value2) {
                     unset($old[$key1]);
                     unset($new[$key2]);
                 } else {
                     $diff[$key1] = [
                         'old' => $value1,
-                        'new' => $value2
+                        'new' => $value2,
                     ];
                     unset($old[$key1]);
                     unset($new[$key2]);
@@ -1224,19 +1247,22 @@ function flatten_diff($arraya, $arrayb) {
             }
         }
     }
-    if($old) {
-        foreach($old as $key => $value) {
+
+    if ($old) {
+        foreach ($old as $key => $value) {
             $diff[$key] = [
                 'old' => $value,
             ];
         }
     }
-    if($new) {
-        foreach($new as $key => $value) {
+
+    if ($new) {
+        foreach ($new as $key => $value) {
             $diff[$key] = [
-                'new' => $value
+                'new' => $value,
             ];
         }
     }
+
     return [$old, $new, $diff];
 }
