@@ -1216,9 +1216,8 @@ class Model implements \Iterator, \ArrayAccess, \Countable
         $this->condition = $condition;
         $this->query     = $sql;
         $this->binds     = $binds;
-pr($sql);
         $data = $this->getConnect()->gets($sql, $binds);
-pr($data);
+
         $class = \get_called_class();
 
         $attributes = [];
