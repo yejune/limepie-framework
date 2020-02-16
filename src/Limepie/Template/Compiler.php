@@ -214,17 +214,19 @@ class Compiler
                     }
 
                     $result = $this->compileStatement($tokens[$_index - 1], $line);
+                    if($result) {
+                        if (1 === $result[0] || false === $result[1]) {
+                            // \로 이스케이프 하는 등 원본에서 가공된 스트링을 돌려주기 위함
+                            $newTokens[$_index - 1] = $result[1];//$tokens[$_index - 1];
+                        } elseif (2 === $result[0]) {
+                            $newTokens[$isOpen]     = '<?php ';
+                            $newTokens[$_index - 1] = $result[1];
+                            $newTokens[$_index]     = '?>';
+                        }
 
-                    if (1 === $result[0] || false === $result[1]) {
-                        // \로 이스케이프 하는 등 원본에서 가공된 스트링을 돌려주기 위함
-                        $newTokens[$_index - 1] = $result[1];//$tokens[$_index - 1];
-                    } elseif (2 === $result[0]) {
-                        $newTokens[$isOpen]     = '<?php ';
-                        $newTokens[$_index - 1] = $result[1];
-                        $newTokens[$_index]     = '?>';
+                        $isOpen = 0;
+
                     }
-
-                    $isOpen = 0;
 
                     break;
                 default:
