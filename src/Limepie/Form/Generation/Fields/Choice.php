@@ -123,15 +123,18 @@ class Choice extends \Limepie\Form\Generation\Fields
             }
             $scripts = <<<EOD
                 <script>
-                (function () {
+                $(function() {
+
                     $('[name="{$keyName}"]').change(function(ev) {
                         ev.preventDefault();
                         {$script}
                         var form = $( this ).closest( "form" )[ 0 ];
                         var validator = $.data( form, "validator" );
-                        validator.loadvalid();
+                        if(validator) {
+                            validator.loadvalid();
+                        }
                     });
-                }());
+                });
                 </script>
             EOD;
 

@@ -19,7 +19,7 @@ class Search extends \Limepie\Form\Generation\Fields
 EOT;
 
         $button = <<<EOT
-        <button class="btn btn-search" type="button"><span data-feather="search"></span></button>
+        <button class="btn btn-search" type="button"><span class="fas fa-search"></span></button>
 EOT;
 
         return [$html, $button];

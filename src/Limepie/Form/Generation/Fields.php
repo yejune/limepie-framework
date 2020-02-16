@@ -38,7 +38,7 @@ class Fields
 
     public static function getMultipleHtml($key)
     {
-        return '<span class="btn-group input-group-btn wrap-btn-plus" data-uniqid="' . $key . '"><button class="btn btn-success btn-plus" type="button"><span data-feather="plus"></span></button></span>';
+        return '<span class="btn-group input-group-btn wrap-btn-plus" data-uniqid="' . $key . '"><button class="btn btn-success btn-plus" type="button"><span class="fas fa-plus"></span></button></span>';
     }
 
     public static function getKey(string $key, string $id) : string
@@ -235,12 +235,12 @@ class Fields
         }
 
         if (true === $isMultiple) {
-            $btn .= '<button class="btn btn-success btn-plus" type="button"><span data-feather="plus"></span></button>';
+            $btn .= '<button class="btn btn-success btn-plus" type="button"><span class="fas fa-plus"></span></button>';
 
             if (1 < $index) {
-                $btn .= '<button class="btn btn-danger btn-minus" type="button"><span data-feather="minus"></span></button>';
+                $btn .= '<button class="btn btn-danger btn-minus" type="button"><span class="fas fa-minus"></span></button>';
             } else {
-                $btn .= '<button class="btn btn-danger btn-minus" type="button"><span data-feather="minus"></span></button>';
+                $btn .= '<button class="btn btn-danger btn-minus" type="button"><span class="fas fa-minus"></span></button>';
             }
         }
         $addClass = '';

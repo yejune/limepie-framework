@@ -119,14 +119,14 @@ EOD;
             }
             $scripts = <<<EOD
 <script>
-(function () {
+$(function() {
     $('[name="{$keyName}"]').change(function() {
 {$script}
         var form = $( this ).closest( "form" )[ 0 ];
         var validator = $.data( form, "validator" );
         validator.elementValid(this);
     });
-}());
+});
 </script>
 EOD;
             $html = <<<EOT

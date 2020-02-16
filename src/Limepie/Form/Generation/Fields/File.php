@@ -15,7 +15,7 @@ class File extends \Limepie\Form\Generation\Fields
             <input type="text" class='form-control-file form-control-filetext' name="{$key}" value="{$value}" accept="{$accept}" />
 EOT;
             $button = <<<EOT
-            <button class="btn btn-filesearch-text" type="button"><span data-feather="search"></span></button>
+            <button class="btn btn-filesearch-text" type="button"><span class="fas fa-search"></span></button>
 EOT;
         } else {
             $value  = '';
@@ -25,7 +25,7 @@ EOT;
             <input type="file" class='form-control-file' name="{$key}" value="{$value}" accept="{$accept}" />
 EOT;
             $button = <<<EOT
-            <button class="btn btn-filesearch" type="button"><span data-feather="search"></span></button>
+            <button class="btn btn-filesearch" type="button"><span class="fas fa-search"></span></button>
 EOT;
         }
 

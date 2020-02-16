@@ -73,7 +73,9 @@ class Postcode extends \Limepie\Form\Generation\Fields
 
                 var form = $('[name="{$keyName}"]').closest( "form" )[ 0 ];
                 var validator = $.data( form, "validator" );
-                validator.loadvalid();
+                if(validator) {
+                    validator.loadvalid();
+                }
 
                 // 팝업에서 검색결과 항목을 클릭했을때 실행할 코드를 작성하는 부분.
 

@@ -69,7 +69,7 @@ class Select extends \Limepie\Form\Generation\Fields
             $childs = \json_encode($property['childs'], \JSON_UNESCAPED_UNICODE);
             $scripts .= <<<EOD
 <script>
-(function () {
+$(function() {
     var {$keyAsUnderbar}_childs = {$childs}
     $('[name="{$keyName}"]').change(function() {
         $('[name="{$targetElementName}"]').empty();
@@ -96,11 +96,13 @@ class Select extends \Limepie\Form\Generation\Fields
 
             var form = $( this ).closest( "form" )[ 0 ];
             var validator = $.data( form, "validator" );
-            validator.loadvalid();
+            if(validator) {
+                validator.loadvalid();
+            }
         } else {
         }
     });
-}());
+});
 </script>
 EOD;
 

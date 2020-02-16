@@ -72,7 +72,7 @@ EOD;
     <input class="form-control" id="address{$geometryId}" name="{$key}" value="{$value}">
 
     <span class="btn-group input-group-btn">
-    <button class="btn btn-geometry" type="button" id="submit{$geometryId}"><span data-feather="search"></span></button>
+    <button class="btn btn-geometry" type="button" id="submit{$geometryId}"><span class="fas fa-search"></span></button>
     </span>
 
     <div class="input-group mt-1" id="map{$geometryId}" style="{$display} width: 100%; height: 300px;"></div>

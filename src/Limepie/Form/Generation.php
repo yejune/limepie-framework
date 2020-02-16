@@ -85,15 +85,39 @@ class Generation
             if (true === \is_array($spec['label'])) {
                 if (true === isset($spec['label'][\Limepie\get_language()])) {
                     $title = $spec['label'][\Limepie\get_language()];
+                } else {
+                    $title = $spec['label'];
                 }
             } else {
                 $title = $spec['label'];
             }
         }
 
-        if ($title) {
-            $html = '<label class="form-label">' . $title . '</label>';
+        $stepper = '';
+        if(true === isset($spec['stepper'])) {
+            foreach(array_reverse($spec['stepper']) as $step) {
+
+                if (true === isset($step['label'])) {
+                    if (true === \is_array($step['label'])) {
+                        if (true === isset($step['label'][\Limepie\get_language()])) {
+                            $label2 = $step['label'][\Limepie\get_language()];
+                        } else {
+                            $label2 = $step['label'];
+                        }
+                    } else {
+                        $label2 = $step['label'];
+                    }
+                    $active = $step['active'] ?? 0;
+                    $stepper .= '<li '.($active ? 'class="active"' : '').'><span>' . $label2 . '</span></li>';
+                }
+            }
         }
+
+        $html = '';
+        if ($title) {
+            $html .= '<label class="form-label">' . $title . '</label>';
+        }
+
 
         $description = '';
 
@@ -108,12 +132,17 @@ class Generation
         }
 
         if ($description) {
-            $html .= '<p>' . $description . '</p>';
+            $html .= '<div class="form-description">' . $description . '</div>';
         }
 
         if ($html) {
             $html .= '<hr />';
         }
+
+        if ($stepper) {
+            $html .= '<div class="stepper"><ul>' . $stepper . '</ul></div>';
+        }
+
         $elements = $method::write($spec['key'] ?? '', $spec, $data);
 
         $innerhtml = <<<EOT
@@ -123,7 +152,7 @@ class Generation
 </div>
 EOT;
 
-        $innerhtml .= '<hr /> <div class="controlbtn">';
+        $innerhtml .= '<hr /> <div class="clearfix">';
 
         if (true === isset($spec['buttons'])) {
             // {@button = form.spec.buttons}
