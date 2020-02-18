@@ -348,7 +348,7 @@ class Group extends \Limepie\Form\Generation\Fields
                     $titleHtml .= $title;
                 } else {
                     $description = \preg_replace("#\*(.*)\n#", '<span class="bold">*$1</span>' . \PHP_EOL, $description);
-                    $titleHtml .= '<p class="description">' . $description . '</p>';
+                    $titleHtml .= '<p class="description">' . nl2br($description) . '</p>';
                 }
             }
 
@@ -364,7 +364,7 @@ EOT;
                 $d = '';
 
                 if ($description) {
-                    $d = '<p class="description">' . $description . '</p>';
+                    $d = '<p class="description">' . nl2br($description) . '</p>';
                 }
 
                 $innerhtml .= <<<EOT

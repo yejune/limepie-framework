@@ -132,7 +132,7 @@ class Generation
         }
 
         if ($description) {
-            $html .= '<div class="form-description">' . $description . '</div>';
+            $html .= '<div class="form-description">' . nl2br($description) . '</div>';
         }
 
         if ($html) {
