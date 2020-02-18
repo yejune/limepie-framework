@@ -212,7 +212,7 @@ class Model implements \Iterator, \ArrayAccess, \Countable
 
                 $functionName = 'getBy' . \Limepie\camelize($rightKeyName);
 
-                if (false === isset($attributes[$leftKeyName])) {
+                if (false === array_key_exists($leftKeyName, $attributes)) {
                     throw new \Exception('relation left ' . $this->tableName . ' "' . $leftKeyName . '" field not found');
                 }
                 $args = [$attributes[$leftKeyName]];
@@ -229,6 +229,7 @@ class Model implements \Iterator, \ArrayAccess, \Countable
                 }
 
                 $class->keyName = $rightKeyName;
+                //pr([$class($connect), $functionName], var_dump($args));
                 $data           = \call_user_func_array([$class($connect), $functionName], $args);
 
                 if ($class->aliasTableName) {
@@ -417,8 +418,8 @@ class Model implements \Iterator, \ArrayAccess, \Countable
                                         if (false === \in_array($remapKey, $value->allFields, true)) {
                                             throw new \Exception($remapKey . ' field not found');
                                         }
-
-                                        if (false === isset($value[$remapKey])) {
+                                        //if (false === isset($value[$remapKey])) {
+                                        if (false === array_key_exists($remapKey, $value->attributes)) {
                                             // 키가 존재하지 않을 경우 에러를 낼것인가. 배열을 만들지 않을것인가?
                                             // 결정 #1
                                             // 컬럼의 값이 널일경우 매칭을 안시키면 되는데 에러가 나므로 해당 코드를 건너뛸수가 없음.
@@ -459,7 +460,7 @@ class Model implements \Iterator, \ArrayAccess, \Countable
     {
         $condition = '';
         $binds     = [];
-
+        //pr($whereKey, $arguments);
         if (false !== \strpos($whereKey, '_and_')) {
             $whereKeys = \explode('_and_', $whereKey);
             $conds     = [];
@@ -506,7 +507,6 @@ class Model implements \Iterator, \ArrayAccess, \Countable
                         }
                     }
 
-
                     if (null === $arguments[$index]) {
                     } else {
                         $binds[':' . $key] = $arguments[$index];
@@ -514,7 +514,7 @@ class Model implements \Iterator, \ArrayAccess, \Countable
                 }
             }
             $condition = \implode(' AND ', $conds);
-        } elseif (true === isset($arguments[0])) {
+        } elseif (true === isset($arguments[0]) || null === $arguments[0]) {
             $whereValue = $arguments[0];
 
             if (true === \is_array($whereValue)) {
@@ -577,7 +577,7 @@ class Model implements \Iterator, \ArrayAccess, \Countable
     public function and($key, $value = null)
     {
         if ($key instanceof \Closure) {
-            \pr($key($this));
+            //\pr($key($this));
         } else {
             $this->and[$key] = $value;
         }
@@ -669,7 +669,8 @@ class Model implements \Iterator, \ArrayAccess, \Countable
 
     public function offsetGet($offset)
     {
-        if (false === isset($this->attributes[$offset])) {
+
+        if (false === array_key_exists($offset, $this->attributes)) {
             $traces = \debug_backtrace();
 
             foreach ($traces as $trace) {
@@ -1223,7 +1224,8 @@ class Model implements \Iterator, \ArrayAccess, \Countable
         $attributes = [];
 
         foreach ($data as $index => $row) {
-            if (false === isset($row[$this->keyName])) {
+
+            if (false === array_key_exists($this->keyName, $row)) {
                 throw new \Exception('gets ' . $this->tableName . ' "' . $this->keyName . '" field not found');
             }
 
@@ -1528,7 +1530,7 @@ class Model implements \Iterator, \ArrayAccess, \Countable
         $class = \get_called_class();
 
         foreach ($data as $index => $row) {
-            if (false === isset($row[$this->keyName])) {
+            if (false === array_key_exists($this->keyName, $row)) {
                 throw new \Exception('gets by ' . $this->tableName . ' "' . $this->keyName . '" field not found');
             }
             $attributes[$row[$this->keyName]] = new $class($this->getConnect(), $row);
