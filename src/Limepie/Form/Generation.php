@@ -79,43 +79,78 @@ class Generation
 
         Generation\Fields::$reverseConditions = $reverseConditions;
 
-        $title = '';
+        $label = '';
 
         if (true === isset($spec['label'])) {
             if (true === \is_array($spec['label'])) {
                 if (true === isset($spec['label'][\Limepie\get_language()])) {
-                    $title = $spec['label'][\Limepie\get_language()];
+                    $label = $spec['label'][\Limepie\get_language()];
                 } else {
-                    $title = $spec['label'];
+                    $label = $spec['label'];
                 }
             } else {
-                $title = $spec['label'];
+                $label = $spec['label'];
             }
         }
 
         $stepper = '';
-        if(true === isset($spec['stepper'])) {
-            foreach(array_reverse($spec['stepper']) as $step) {
 
-                if (true === isset($step['label'])) {
-                    if (true === \is_array($step['label'])) {
-                        if (true === isset($step['label'][\Limepie\get_language()])) {
-                            $label2 = $step['label'][\Limepie\get_language()];
+        if (true === isset($spec['stepper'])) {
+            if (true === \is_array($spec['stepper']) && true === isset($spec['stepper'][0]['label'])) {
+                foreach (\array_reverse($spec['stepper']) as $step) {
+                    if (true === isset($step['label'])) {
+                        if (true === \is_array($step['label'])) {
+                            if (true === isset($step['label'][\Limepie\get_language()])) {
+                                $label2 = $step['label'][\Limepie\get_language()];
+                            } else {
+                                $label2 = $step['label'];
+                            }
                         } else {
                             $label2 = $step['label'];
                         }
-                    } else {
-                        $label2 = $step['label'];
+                        $active = $step['active'] ?? 0;
+                        $stepper .= '<li ' . ($active ? 'class="active"' : '') . '><span>' . $label2 . '</span></li>';
                     }
-                    $active = $step['active'] ?? 0;
-                    $stepper .= '<li '.($active ? 'class="active"' : '').'><span>' . $label2 . '</span></li>';
                 }
+            } else {
+                if (true === \is_array($spec['stepper'])) {
+                    if (true === isset($spec['stepper'][\Limepie\get_language()])) {
+                        $label2 = $spec['stepper'][\Limepie\get_language()];
+                    } else {
+                        $label2 = $spec['stepper'];
+                    }
+                } else {
+                    $label2 = $spec['stepper'];
+                }
+
+                $stepper .= '<li class="active"><span>' . $label2 . '</span></li>';
             }
         }
 
         $html = '';
+
+        if ($stepper) {
+            $html .= '<div class="stepper"><ul>' . $stepper . '</ul></div>';
+        }
+
+
+        $title = '';
+        if (true === isset($spec['title'])) {
+            if (true === \is_array($spec['title'])) {
+                if (true === isset($spec['title'][\Limepie\get_language()])) {
+                    $title = $spec['title'][\Limepie\get_language()];
+                }
+            } else {
+                $title = $spec['title'];
+            }
+        }
+
         if ($title) {
-            $html .= '<label class="form-label">' . $title . '</label>';
+            $html .= '<h2 class="h6 font-weight-semi-bold">' . $title . '</h2>';
+        }
+
+        if ($label) {
+            $html .= '<label class="form-label">' . $label . '</label>';
         }
 
 
@@ -132,16 +167,13 @@ class Generation
         }
 
         if ($description) {
-            $html .= '<div class="form-description">' . nl2br($description) . '</div>';
+            $html .= '<div class="form-description">' . \nl2br($description) . '</div>';
         }
 
-        if ($html) {
+        if ($title || $label || $description) {
             $html .= '<hr />';
         }
 
-        if ($stepper) {
-            $html .= '<div class="stepper"><ul>' . $stepper . '</ul></div>';
-        }
 
         $elements = $method::write($spec['key'] ?? '', $spec, $data);
 
@@ -221,20 +253,19 @@ EOT;
                 }
 
                 if ($button['description'] ?? false) {
-
                     if (true === isset($button['description'][\Limepie\get_language()])) {
                         $description = $button['description'][\Limepie\get_language()];
                     } elseif (true === isset($button['description'])) {
                         $description = $button['description'];
                     }
 
-                    $description = 'data-description="' . htmlspecialchars($description) . '"';
+                    $description = 'data-description="' . \htmlspecialchars($description) . '"';
                 }
 
                 if ('delete' === $button['type']) {
                     $string = \Limepie\genRandomString(6);
 
-                    $innerhtml .= '<a href="" data-method="delete" data-value="' . $string . '" ' . str_replace('{=string}',$string,$description) . ' class="btn ' . $class . '">' . $text . '</a>';
+                    $innerhtml .= '<a href="" data-method="delete" data-value="' . $string . '" ' . \str_replace('{=string}', $string, $description) . ' class="btn ' . $class . '">' . $text . '</a>';
                 } elseif ('a' === $button['type']) {
                     $innerhtml .= '<a href="' . $href . '" class="btn ' . $class . '">' . $text . '</a>';
                 } else {
@@ -246,7 +277,7 @@ EOT;
                 //$innerhtml .= ' ';
             }
         } else {
-            $innerhtml .= '<input type="submit" value="저장" class="btn btn-primary" />';
+            $innerhtml .= '<input type="submit" value="저장" class="btn btn-sm btn-soft-primary" />';
         }
         $innerhtml .= '</div>';
 
