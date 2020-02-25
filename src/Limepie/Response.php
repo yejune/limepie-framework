@@ -88,6 +88,8 @@ class Response
 
     public $headers = [];
 
+    public $redirect = false;
+
     final public function __construct()
     {
         if (true === \method_exists($this, '__init')) {
@@ -148,7 +150,7 @@ class Response
     public function redirect($location, $seconds = 0)
     {
         $this->content = '<meta http-equiv="refresh" content="' . $seconds . '; url=' . $location . '" />';
-
+        $this->redirect = true;
         return $this;
     }
 
