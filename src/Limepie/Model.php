@@ -627,7 +627,7 @@ class Model implements \Iterator, \ArrayAccess, \Countable
     public function getConnect()
     {
         if (!$this->pdo) {
-            throw new \Exception('db connection not found');
+            throw new \Exception($this->tableName.' db connection not found');
         }
 
         return $this->pdo;
@@ -811,7 +811,7 @@ class Model implements \Iterator, \ArrayAccess, \Countable
                     if (true === isset($this->dataTypes[$field])) {
                         switch ($this->dataTypes[$field]) {
                             case 'serialize':
-                                $value = \serialize($value);
+                                $value = \serialize(json_decode(json_encode($value), true));
                                 break;
                             case 'json':
                                 $value = \json_encode($value);
@@ -894,7 +894,7 @@ class Model implements \Iterator, \ArrayAccess, \Countable
                     if (true === isset($this->dataTypes[$field])) {
                         switch ($this->dataTypes[$field]) {
                             case 'serialize':
-                                $value = \serialize($value);
+                                $value = \serialize(json_decode(json_encode($value), true));
 
                                 break;
                             case 'json':
