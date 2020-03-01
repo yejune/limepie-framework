@@ -103,19 +103,25 @@ class Request
             return $this->scheme;
         }
 
-        $https = $this->getServer('HTTPS');
+        $https = $this->getServer('HTTP_X_FORWARDED_PROTO');
 
         if ($https) {
-            if ('off' === $https) {
-                $this->scheme = 'http';
-            } else {
-                $this->scheme = 'https';
-            }
+            $this->this->scheme = $https;
         } else {
-            $this->scheme = 'http';
-        }
+            $https = $this->getServer('HTTPS');
 
+            if ($https) {
+                if ('off' === $https) {
+                    $this->scheme = 'http';
+                } else {
+                    $this->scheme = 'https';
+                }
+            } else {
+                $this->scheme = 'http';
+            }
+        }
         return (string) $this->scheme;
+
     }
 
     public function getHost() : string
