@@ -14,7 +14,14 @@ function ___($domain, $string, $a, $b)
 {
     return \dngettext($domain, $string, $a, $b);
 }
-
+function cprint($content, $nl2br = false)
+{
+    $content = strip_tags($content);
+    if($nl2br) {
+        $content = nl2br($content);
+    }
+    return $content;
+}
 /**
  * debug용 print_r
  *
