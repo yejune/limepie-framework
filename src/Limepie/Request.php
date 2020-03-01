@@ -106,7 +106,7 @@ class Request
         $https = $this->getServer('HTTP_X_FORWARDED_PROTO');
 
         if ($https) {
-            $this->this->scheme = $https;
+            $this->scheme = $https;
         } else {
             $https = $this->getServer('HTTPS');
 
