@@ -1624,7 +1624,9 @@ class Model implements \Iterator, \ArrayAccess, \Countable
                 if (true === \is_array($attribute)) {
                     if (0 < \count($attribute)) {
                         foreach ($attribute as $k2 => $v2) {
-                            $v2($this->getConnect())->objectToDelete();
+                            if ($v2 instanceof self) {
+                                $v2($this->getConnect())->objectToDelete();
+                            }
                         }
                     }
                 }
