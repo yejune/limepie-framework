@@ -22,6 +22,27 @@ function cprint($content, $nl2br = false)
     }
     return $content;
 }
+
+function format_mobile($phone, $isMark = false){
+    $phone = preg_replace("/[^0-9]/", "", $phone);
+    $length = strlen($phone);
+
+    $match      = '$1-$2-$3';
+    if($isMark == true) {
+        $match  = '$1-****-$3';
+    }
+    switch($length){
+      case 11 :
+          return preg_replace("/([0-9]{3})([0-9]{4})([0-9]{4})/", $match, $phone);
+          break;
+      case 10:
+          return preg_replace("/([0-9]{3})([0-9]{3})([0-9]{4})/", $match, $phone);
+          break;
+      default :
+          return $phone;
+          break;
+    }
+}
 /**
  * debug용 print_r
  *
