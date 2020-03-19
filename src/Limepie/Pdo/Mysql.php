@@ -33,7 +33,7 @@ class Mysql extends \Pdo
     {
         try {
             // return parent::fetchAll($statement, $mode, $bindParameters) ?: null;
-
+            //pr(func_get_args());
             if ($this->debug) {
                 \Limepie\Timer::start();
             }
@@ -97,6 +97,8 @@ class Mysql extends \Pdo
      */
     public function get1($statement, $bindParameters = [], $mode = \PDO::FETCH_ASSOC)
     {
+        //pr(func_get_args());
+
         try {
             if ($this->debug) {
                 \Limepie\Timer::start();
@@ -320,7 +322,10 @@ class Mysql extends \Pdo
 
         foreach ($bindParameters as $key => $value) {
             if (true === \is_array($value)) {
-                $binds[$key] = $value[0];
+                foreach($value as $r) {
+                    $binds[$key] = $r;
+                    break;
+                }
             } else {
                 $binds[$key] = $value;
             }

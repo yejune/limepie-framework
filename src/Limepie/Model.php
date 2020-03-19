@@ -110,7 +110,7 @@ class Model implements \Iterator, \ArrayAccess, \Countable
         } elseif (0 === \strpos($name, 'gt')) {
             return $this->buildGt($name, $arguments);
         } elseif (0 === \strpos($name, 'lt')) {
-            return $this->buildGetField($name, $arguments);
+            return $this->buildLt($name, $arguments);
         } elseif (0 === \strpos($name, 'ge')) {
             return $this->buildGe($name, $arguments);
         } elseif (0 === \strpos($name, 'le')) {
@@ -119,6 +119,8 @@ class Model implements \Iterator, \ArrayAccess, \Countable
             return $this->buildEq($name, $arguments);
         } elseif (0 === \strpos($name, 'ne')) {
             return $this->buildNe($name, $arguments);
+        } elseif (0 === \strpos($name, 'lk')) {
+            return $this->buildLk($name, $arguments);
         }
 
         throw new \Limepie\Exception('"' . $name . '" method not found', 1999);
@@ -158,6 +160,13 @@ class Model implements \Iterator, \ArrayAccess, \Countable
         }
     }
 
+    public function getmicrotime()
+    {
+        [$usec, $sec] = \explode(' ', \microtime());
+
+        return (float) $usec + (float) $sec;
+    }
+
     public function buildDataType(array $attributes = [])
     {
         if ($attributes) {
@@ -165,26 +174,29 @@ class Model implements \Iterator, \ArrayAccess, \Countable
                 if (true === isset($this->dataTypes[$field])) {
                     switch ($this->dataTypes[$field]) {
                         case 'serialize':
-                            if($value) {
-                                $value = \unserialize($value);
+                            if ($value) {
+                                $value = \Limepie\unserialize($value);
                             } else {
                                 $value = [];
                             }
+
                             break;
                         case 'json':
-                            if($value) {
+                            if ($value) {
                                 $value = \json_decode($value, true);
                             } else {
                                 $value = [];
                             }
+
                             break;
                         case 'yml':
                         case 'yaml':
-                            if($value) {
+                            if ($value) {
                                 $value = \yaml_parse($value);
                             } else {
                                 $value = [];
                             }
+
                             break;
                     }
                 }
@@ -212,7 +224,7 @@ class Model implements \Iterator, \ArrayAccess, \Countable
 
                 $functionName = 'getBy' . \Limepie\camelize($rightKeyName);
 
-                if (false === array_key_exists($leftKeyName, $attributes)) {
+                if (false === \array_key_exists($leftKeyName, $attributes)) {
                     throw new \Exception('relation left ' . $this->tableName . ' "' . $leftKeyName . '" field not found');
                 }
                 $args = [$attributes[$leftKeyName]];
@@ -230,7 +242,7 @@ class Model implements \Iterator, \ArrayAccess, \Countable
 
                 $class->keyName = $rightKeyName;
                 //pr([$class($connect), $functionName], var_dump($args));
-                $data           = \call_user_func_array([$class($connect), $functionName], $args);
+                $data = \call_user_func_array([$class($connect), $functionName], $args);
 
                 if ($class->aliasTableName) {
                     $attributes[$class->aliasTableName] = $data;
@@ -419,7 +431,7 @@ class Model implements \Iterator, \ArrayAccess, \Countable
                                             throw new \Exception($remapKey . ' field not found');
                                         }
                                         //if (false === isset($value[$remapKey])) {
-                                        if (false === array_key_exists($remapKey, $value->attributes)) {
+                                        if (false === \array_key_exists($remapKey, $value->attributes)) {
                                             // 키가 존재하지 않을 경우 에러를 낼것인가. 배열을 만들지 않을것인가?
                                             // 결정 #1
                                             // 컬럼의 값이 널일경우 매칭을 안시키면 되는데 에러가 나므로 해당 코드를 건너뛸수가 없음.
@@ -490,6 +502,8 @@ class Model implements \Iterator, \ArrayAccess, \Countable
                         $conds[] = "`{$this->tableName}`." . '`' . $key2 . '`' . ' = :' . $key;
                     } elseif (0 === \strpos($key, 'ne_')) {
                         $conds[] = "`{$this->tableName}`." . '`' . $key2 . '`' . ' != :' . $key;
+                    } elseif (0 === \strpos($key, 'lk_')) {
+                        $conds[] = "`{$this->tableName}`." . '`' . $key2 . '`' . ' like concat("%", :' . $key.', "%")';
                     } else {
                         // $this->bindcount++;
 
@@ -499,9 +513,8 @@ class Model implements \Iterator, \ArrayAccess, \Countable
                         //         $key.$this->bindcount => $arguments[$index]
                         //     ]
                         // ];
-                        if($arguments[$index] === null) {
+                        if (null === $arguments[$index]) {
                             $conds[] = "`{$this->tableName}`." . '`' . $key . '` is null';
-
                         } else {
                             $conds[] = "`{$this->tableName}`." . '`' . $key . '`' . ' = :' . $key;
                         }
@@ -514,7 +527,7 @@ class Model implements \Iterator, \ArrayAccess, \Countable
                 }
             }
             $condition = \implode(' AND ', $conds);
-        } elseif (true === isset($arguments[0]) || null === $arguments[0]) {
+        } elseif (true === isset($arguments[0]) || ($arguments && null === $arguments[0])) {
             $whereValue = $arguments[0];
 
             if (true === \is_array($whereValue)) {
@@ -541,8 +554,10 @@ class Model implements \Iterator, \ArrayAccess, \Countable
                     $condition = "`{$this->tableName}`.`{$whereKey2}` = :{$whereKey}";
                 } elseif (0 === \strpos($whereKey, 'ne_')) {
                     $condition = "`{$this->tableName}`.`{$whereKey2}` != :{$whereKey}";
+                } elseif (0 === \strpos($whereKey, 'lk_')) {
+                    $condition = "`{$this->tableName}`.`{$whereKey2}` like concat('%',:{$whereKey},'%')";
                 } else {
-                    if(null === $whereValue) {
+                    if (null === $whereValue) {
                         $condition = "`{$this->tableName}`.`{$whereKey}` is null";
                     } else {
                         $condition = "`{$this->tableName}`.`{$whereKey}` = :{$whereKey}";
@@ -557,6 +572,9 @@ class Model implements \Iterator, \ArrayAccess, \Countable
                     ];
                 }
             }
+        } else {
+            //pr($this);
+            //\pr(func_get_args());
         }
 
         if ($condition) {
@@ -627,7 +645,7 @@ class Model implements \Iterator, \ArrayAccess, \Countable
     public function getConnect()
     {
         if (!$this->pdo) {
-            throw new \Exception($this->tableName.' db connection not found');
+            throw new \Exception($this->tableName . ' db connection not found');
         }
 
         return $this->pdo;
@@ -669,8 +687,7 @@ class Model implements \Iterator, \ArrayAccess, \Countable
 
     public function offsetGet($offset)
     {
-
-        if (false === array_key_exists($offset, $this->attributes)) {
+        if (false === \array_key_exists($offset, $this->attributes)) {
             $traces = \debug_backtrace();
 
             foreach ($traces as $trace) {
@@ -811,14 +828,17 @@ class Model implements \Iterator, \ArrayAccess, \Countable
                     if (true === isset($this->dataTypes[$field])) {
                         switch ($this->dataTypes[$field]) {
                             case 'serialize':
-                                $value = \serialize(json_decode(json_encode($value), true));
+                                $value = \serialize(\json_decode(\json_encode($value), true));
+
                                 break;
                             case 'json':
                                 $value = \json_encode($value);
+
                                 break;
                             case 'yml':
                             case 'yaml':
                                 $value = \yaml_emit($value);
+
                                 break;
                         }
                     }
@@ -831,15 +851,15 @@ class Model implements \Iterator, \ArrayAccess, \Countable
                     //         $binds[':' . $vKey] = $vValue;
                     //     }
                     // } else {
-                        $fields[]            = '`' . $field . '`';
-                        $binds[':' . $field] = $value;
-                        $values[]            = ':' . $field;
-                    // }
+                    $fields[]            = '`' . $field . '`';
+                    $binds[':' . $field] = $value;
+                    $values[]            = ':' . $field;
+                // }
                 } else {
-                    if($field == 'ip') {
+                    if ('ip' === $field) {
                         $fields[]            = '`' . $field . '`';
                         $binds[':' . $field] = $_SERVER['REMOTE_ADDR'];
-                        $values[]            = 'inet6_aton(:' . $field.')';
+                        $values[]            = 'inet6_aton(:' . $field . ')';
                     }
                 }
             }
@@ -887,14 +907,13 @@ class Model implements \Iterator, \ArrayAccess, \Countable
         foreach ($this->allFields as $field) {
             if ($this->sequenceName === $field) {
             } else {
-
                 if (true === isset($this->attributes[$field])) {
                     $value = $this->attributes[$field];
 
                     if (true === isset($this->dataTypes[$field])) {
                         switch ($this->dataTypes[$field]) {
                             case 'serialize':
-                                $value = \serialize(json_decode(json_encode($value), true));
+                                $value = \serialize(\json_decode(\json_encode($value), true));
 
                                 break;
                             case 'json':
@@ -918,10 +937,10 @@ class Model implements \Iterator, \ArrayAccess, \Countable
                     // } else {
                     $fields[]            = "`{$this->tableName}`." . '`' . $field . '` = :' . $field;
                     $binds[':' . $field] = $value;
-                    // }
+                // }
                 } else {
-                    if($field == 'ip') {
-                        $fields[]            = "`{$this->tableName}`." . '`' . $field . '` = inet6_aton(:' . $field.')';
+                    if ('ip' === $field) {
+                        $fields[]            = "`{$this->tableName}`." . '`' . $field . '` = inet6_aton(:' . $field . ')';
                         $binds[':' . $field] = $_SERVER['REMOTE_ADDR'];
                     }
                 }
@@ -1041,7 +1060,7 @@ class Model implements \Iterator, \ArrayAccess, \Countable
 
         foreach ($this->selectFields as $column => $alias) {
             if (true === \is_numeric($column)) {
-                if($alias == 'ip') {
+                if ('ip' === $alias) {
                     $fields[] = "inet6_ntoa(`{$this->tableName}`." . '`' . $alias . '`) `' . $alias . '`';
                 } else {
                     $fields[] = "`{$this->tableName}`." . '`' . $alias . '`';
@@ -1138,16 +1157,12 @@ class Model implements \Iterator, \ArrayAccess, \Countable
                 COUNT(*)
             FROM
                 `{$this->tableName}`
+            {$condition}
         SQL;
 
-        if ($condition) {
-            $sql .= '' . $condition;
-        } elseif ($this->condition) {
-            $sql .= '' . $this->condition;
-            $binds = $this->binds;
-        }
-
-        $this->query = $sql;
+        $this->condition = $condition;
+        $this->query     = $sql;
+        $this->binds     = $binds;
 
         return $this->getConnect()->get1($sql, $binds);
     }
@@ -1192,6 +1207,11 @@ class Model implements \Iterator, \ArrayAccess, \Countable
 
         if (true === isset($arguments[0]['condition'])) {
             $condition = '    WHERE ' . $arguments[0]['condition'];
+        } else {
+            if ($this->condition) {
+                $condition = '' . $this->condition;
+                $binds     = $this->binds;
+            }
         }
 
         if (true === isset($arguments[0]['binds'])) {
@@ -1217,15 +1237,14 @@ class Model implements \Iterator, \ArrayAccess, \Countable
         $this->condition = $condition;
         $this->query     = $sql;
         $this->binds     = $binds;
-        $data = $this->getConnect()->gets($sql, $binds);
+        $data            = $this->getConnect()->gets($sql, $binds);
 
         $class = \get_called_class();
 
         $attributes = [];
 
         foreach ($data as $index => $row) {
-
-            if (false === array_key_exists($this->keyName, $row)) {
+            if (false === \array_key_exists($this->keyName, $row)) {
                 throw new \Exception('gets ' . $this->tableName . ' "' . $this->keyName . '" field not found');
             }
 
@@ -1309,7 +1328,7 @@ class Model implements \Iterator, \ArrayAccess, \Countable
     {
         $key = \Limepie\decamelize(\substr($name, 3));
 
-        $this->and[$key] = $arguments[0];
+        $this->and[$key] = $arguments[0] ?? '';
 
         $this->bindcount++;
 
@@ -1373,6 +1392,15 @@ class Model implements \Iterator, \ArrayAccess, \Countable
                     $whereKey . $this->bindcount => $arguments[0],
                 ],
             ];
+        } elseif (0 === \strpos($whereKey, 'lk_')) {
+            $this->bindcount++;
+
+            $this->conditions[] = [
+                'string' => $whereKey . ' like concat("%", :' . $whereKey . $this->bindcount. ', "%")',
+                'bind'   => [
+                    $whereKey . $this->bindcount => $arguments[0],
+                ],
+            ];
         } else {
             $this->bindcount++;
 
@@ -1399,6 +1427,39 @@ class Model implements \Iterator, \ArrayAccess, \Countable
 
         $this->conditions[] = [
             'string' => $key . ' >= :' . $key . $this->bindcount,
+            'bind'   => [
+                $key . $this->bindcount => $arguments[0],
+            ],
+        ];
+
+        return $this;
+    }
+
+
+    private function buildLe($name, $arguments)
+    {
+        $key = \Limepie\decamelize(\substr($name, 2));
+
+        $this->bindcount++;
+
+        $this->conditions[] = [
+            'string' => $key . ' <= :' . $key . $this->bindcount,
+            'bind'   => [
+                $key . $this->bindcount => $arguments[0],
+            ],
+        ];
+
+        return $this;
+    }
+
+    private function buildLk($name, $arguments)
+    {
+        $key = \Limepie\decamelize(\substr($name, 2));
+
+        $this->bindcount++;
+
+        $this->conditions[] = [
+            'string' => $key . ' like concat("%", :' . $key . $this->bindcount, ', "%")',
             'bind'   => [
                 $key . $this->bindcount => $arguments[0],
             ],
@@ -1530,7 +1591,7 @@ class Model implements \Iterator, \ArrayAccess, \Countable
         $class = \get_called_class();
 
         foreach ($data as $index => $row) {
-            if (false === array_key_exists($this->keyName, $row)) {
+            if (false === \array_key_exists($this->keyName, $row)) {
                 throw new \Exception('gets by ' . $this->tableName . ' "' . $this->keyName . '" field not found');
             }
             $attributes[$row[$this->keyName]] = new $class($this->getConnect(), $row);
@@ -1596,10 +1657,9 @@ class Model implements \Iterator, \ArrayAccess, \Countable
                 if (true === \is_array($attribute)) {
                     if (0 < \count($attribute)) {
                         foreach ($attribute as $k2 => $v2) {
-
                             if (true === \is_object($v2)) {
                                 $data[ $key ][$k2] = $v2->objectToArray();
-                            }else {
+                            } else {
                                 $data[ $key ][$k2] = $v2;
                             }
                         }

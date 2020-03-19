@@ -360,6 +360,18 @@ Validation::addMethod('minlength', function($value, $name, $param) {
     return $this->optional($value) || $length >= $param;
 });
 
+Validation::addMethod('even', function($value, $name, $param) {
+    $length = $this->getLength($value);
+
+    return $this->optional($value) || 0 === (int) $value % 2;
+});
+
+Validation::addMethod('odd', function($value, $name, $param) {
+    $length = $this->getLength($value);
+
+    return $this->optional($value) || 1 === (int) $value % 2;
+});
+
 Validation::addMethod('match', function($value, $name, $param) {
     $a = $this->optional($value, $name) || \preg_match('/^' . $param . '$/', (string) $value, $m);
     // \pr($m);
@@ -394,7 +406,7 @@ Validation::addMethod('range', function($value, $name, $param) {
 Validation::addMethod('in', function($value, $name, $param) {
     $enum = \Limepie\array_value_flatten($param);
 
-    return $this->optional($value) || in_array($value, $enum, false) !== false;
+    return $this->optional($value) || false !== \in_array($value, $enum, false);
 });
 
 // required일때 동작
@@ -482,9 +494,8 @@ Validation::addMethod('equalTo', function($value, $name, $param) {
     return $this->getValue($target) === $value;
 });
 
-
 Validation::addMethod('enddate', function($value, $name, $param) {
     $start = $this->getValue($this->getNameByDot($param));
-    return strtotime($start) <= strtotime($value) || $value == "";
 
+    return \strtotime($start) <= \strtotime($value) || '' === $value;
 });

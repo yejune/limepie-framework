@@ -8,13 +8,13 @@ class Pagination
 
     private $totalPages = 0;
 
-    private $currentPage = 0;
+    private $currentPage = 1;
 
     private $recordsPerPage = 10;
 
     private $pagesPerBlock = 9;
 
-    private $viewStartEnd = false;
+    private $viewStartEnd = true;
 
     private $urlPattern;
 
@@ -24,11 +24,11 @@ class Pagination
         $recordsPerPage = 10,
         $pagesPerBlock = 9,
         $urlPattern = '',
-        $viewStartEnd = false
+        $viewStartEnd = true
     ) {
         $this->totalCount     = (int) $totalCount;
         $this->recordsPerPage = (int) $recordsPerPage;
-        $this->currentPage    = (int) $currentPage;
+        $this->currentPage    = (int) ($currentPage ?: 1);
         $this->urlPattern     = $urlPattern;
         $this->pagesPerBlock  = (int) $pagesPerBlock;
         $this->viewStartEnd   = $viewStartEnd;
@@ -44,7 +44,7 @@ class Pagination
         $recordsPerPage = 10,
         $pagesPerBlock = 9,
         $urlPattern = '',
-        $viewStartEnd = false
+        $viewStartEnd = true
     ) {
         $pagination = new Pagination($totalCount, $currentPage, $recordsPerPage, $pagesPerBlock, $urlPattern, $viewStartEnd);
 
@@ -57,7 +57,7 @@ class Pagination
         $recordsPerPage = 10,
         $pagesPerBlock = 9,
         $urlPattern = '',
-        $viewStartEnd = false
+        $viewStartEnd = true
     ) {
         $pagination = new Pagination($totalCount, $currentPage, $recordsPerPage, $pagesPerBlock, $urlPattern, $viewStartEnd);
 
@@ -94,7 +94,6 @@ class Pagination
             if ($endPage >= $this->totalPages) {
                 $endPage = $this->totalPages;
             }
-
             for ($i = $startPage; $i <= $endPage; $i++) {
                 $pages[] = $this->createPage($i, $i === $this->currentPage);
             }
@@ -135,23 +134,23 @@ class Pagination
         $html = '<ul class="pagination">';
 
         if ($pagination['prevUrl']) {
-            $html .= '<li><a href="' . $pagination['prevUrl'] . '">&laquo;</a></li>'; //Previous
+            $html .= '<li class="page-item"><a class="page-link" href="' . $pagination['prevUrl'] . '">&laquo;</a></li>'; //Previous
         } else {
-            $html .= '<li class="disabled"><a>&laquo;</a></li>';
+            $html .= '<li class="page-item disabled"><a class="page-link">&laquo;</a></li>';
         }
 
         foreach ($pagination['pages'] as $page) {
             if ($page['url']) {
-                $html .= '<li' . ($page['isCurrent'] ? ' class="active"' : '') . '><a href="' . $page['url'] . '">' . $page['num'] . '</a></li>';
+                $html .= '<li  class="page-item' . ($page['isCurrent'] ? ' active' : '') . '"><a class="page-link" href="' . $page['url'] . '">' . $page['num'] . '</a></li>';
             } else {
-                $html .= '<li class="disabled"><span>' . $page['num'] . '</span></li>';
+                $html .= '<li class="page-item disabled"><span class="page-link">' . $page['num'] . '</span></li>';
             }
         }
 
         if ($pagination['nextUrl']) {
-            $html .= '<li><a href="' . $pagination['nextUrl'] . '">&raquo;</a></li>'; //Next
+            $html .= '<li class="page-item"><a class="page-link" href="' . $pagination['nextUrl'] . '">&raquo;</a></li>'; //Next
         } else {
-            $html .= '<li class="disabled"><a>&raquo;</a></li>';
+            $html .= '<li class="page-item disabled"><a class="page-link">&raquo;</a></li>';
         }
         $html .= '</ul>';
 

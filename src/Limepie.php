@@ -16,30 +16,49 @@ function ___($domain, $string, $a, $b)
 }
 function cprint($content, $nl2br = false)
 {
-    $content = strip_tags($content);
-    if($nl2br) {
-        $content = nl2br($content);
+    $content = \strip_tags($content);
+
+    if ($nl2br) {
+        $content = \nl2br($content);
     }
+
     return $content;
 }
+function unserialize($value)
+{
+    $value = \preg_replace_callback(
+        '/(?<=^|\{|;)s:(\d+):\"(.*?)\";(?=[asbdiO]\:\d|N;|\}|$)/s',
+        function($m) {
+            return 's:' . \strlen($m[2]) . ':"' . $m[2] . '";';
+        },
+        $value
+    );
 
-function format_mobile($phone, $isMark = false){
-    $phone = preg_replace("/[^0-9]/", "", $phone);
-    $length = strlen($phone);
+    return \unserialize($value);
+}
+function format_mobile($phone, $isMark = false)
+{
+    $phone  = \preg_replace('/[^0-9]/', '', $phone);
+    $length = \strlen($phone);
 
-    $match      = '$1-$2-$3';
-    if($isMark == true) {
-        $match  = '$1-****-$3';
+    $match = '$1-$2-$3';
+
+    if (true === $isMark) {
+        $match = '$1-****-$3';
     }
-    switch($length){
-      case 11 :
-          return preg_replace("/([0-9]{3})([0-9]{4})([0-9]{4})/", $match, $phone);
+
+    switch ($length) {
+      case 11:
+          return \preg_replace('/([0-9]{3})([0-9]{4})([0-9]{4})/', $match, $phone);
+
           break;
       case 10:
-          return preg_replace("/([0-9]{3})([0-9]{3})([0-9]{4})/", $match, $phone);
+          return \preg_replace('/([0-9]{3})([0-9]{3})([0-9]{4})/', $match, $phone);
+
           break;
-      default :
+      default:
           return $phone;
+
           break;
     }
 }
@@ -204,6 +223,34 @@ function decode_file(string $filename) : array
             throw new \Exception($ext . ' not support');
 
             break;
+    }
+
+    return $result;
+}
+
+function ceil(float $val, int $precision = 0)
+{
+    $x = 1;
+    for($i=0;$i<$precision;$i++) {
+        $x = $x * 10;
+    }
+    return \ceil($val * $x) / $x;
+}
+
+function array_percent(array $numbers, $precision = 0)
+{
+    $result = [];
+    $total  = \array_sum($numbers);
+
+    foreach ($numbers as $key => $number) {
+        $result[$key] = \Limepie\ceil(($number / $total) * 100, $precision);
+    }
+
+    $sum = \array_sum($result);
+
+    if (100 !== $sum) {
+        $maxKeys             = \array_keys($result, \max($result), true);
+        $result[$maxKeys[0]] = 100 - ($sum - \max($result));
     }
 
     return $result;
@@ -622,11 +669,11 @@ function ago($enddate, $format = '$d day $H:$i:$s')
     $minute     = \floor(($timediffer - ($day * 60 * 60 * 24) - ($hour * 60 * 60)) / (60));
     $second     = $timediffer - ($day * 60 * 60 * 24) - ($hour * 60 * 60) - ($minute * 60);
 
-    if (1 === \strlen((string)$minute)) {
+    if (1 === \strlen((string) $minute)) {
         $minute = '0' . $minute;
     }
 
-    if (1 === \strlen((string)$second)) {
+    if (1 === \strlen((string) $second)) {
         $second = '0' . $second;
     }
 

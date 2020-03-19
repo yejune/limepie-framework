@@ -22,12 +22,12 @@ class Tui extends \Limepie\Form\Generation\Fields
         }
         $id = uniqid();
         $html = <<<EOT
-        <link rel="stylesheet" href="https://uicdn.toast.com/tui-editor/latest/tui-editor.css"></link>
-        <link rel="stylesheet" href="https://uicdn.toast.com/tui-editor/latest/tui-editor-contents.css"></link>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tui-editor/1.4.10/tui-editor.css"></link>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tui-editor/1.4.10/tui-editor-contents.css"></link>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.48.4/codemirror.css"></link>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css"></link>
         {$linkcss}
-        <script src="https://uicdn.toast.com/tui-editor/latest/tui-editor-Editor-full.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/tui-editor/1.4.10/tui-editor-Editor-full.js"></script>
         <textarea class="form-control d-none" id="textarea{$id}" name="{$key}">{$value}</textarea>
         <textarea class="form-control d-none" id="textarea{$id}_html" name="{$key}_html"></textarea>
 
