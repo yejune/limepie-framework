@@ -746,7 +746,7 @@ class Compiler
 
                     break;
                 case 'sam':
-                    if (false === \in_array($prev['name'], ['string', 'number', 'right_bracket'], true)) {
+                    if (false === \in_array($prev['name'], ['string', 'number', 'right_bracket', 'right_parenthesis'], true)) {
                         if (true === $this->debug) {
                             \pr($xpr, $prev, $current, __LINE__);
                         }
