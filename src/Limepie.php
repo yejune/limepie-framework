@@ -24,6 +24,21 @@ function cprint($content, $nl2br = false)
 
     return $content;
 }
+
+function date($date)
+{
+    $format = 'Y년 m월 d일 A h:i';
+    $date   = \str_replace(['AM', 'PM'], ['오전', '오후'], \date($format, \strtotime($date)));
+
+    if (false !== \stripos($date, '오전 12')) {
+        $date = \str_replace('오전 12', '밤 12', $date);
+    } elseif (false !== \stripos($date, '오후 12')) {
+        $date = \str_replace('오후 12', '낮 12', $date);
+    }
+
+    return $date;
+}
+
 function unserialize($value)
 {
     $value = \preg_replace_callback(
