@@ -664,7 +664,7 @@ function day_ago($time) : string
         if ($time < $unit) {
             continue;
         }
-        $numberOfUnits = \floor($time / $unit);
+        $numberOfUnits = \ceil($time / $unit);
         $parts[]       = $numberOfUnits; // . ' ' . $text . ((1 < $numberOfUnits) ? 's' : '');
 
         $time -= ($unit * $numberOfUnits);
