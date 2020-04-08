@@ -30,8 +30,12 @@ function date($date)
     $format = 'Y년 m월 d일 A h:i';
     $date   = \str_replace(['AM', 'PM'], ['오전', '오후'], \date($format, \strtotime($date)));
 
-    if (false !== \stripos($date, '오전 12')) {
-        $date = \str_replace('오전 12', '밤 12', $date);
+    if (false !== \stripos($date, '오전 12:00')) {
+        $date = \str_replace('오전 12:00', '자정', $date);
+    } elseif (false !== \stripos($date, '오전 12')) {
+        $date = \str_replace('오전 12', '00', $date);
+    } elseif (false !== \stripos($date, '오후 12:00')) {
+        $date = \str_replace('오후 12:00', '정오', $date);
     } elseif (false !== \stripos($date, '오후 12')) {
         $date = \str_replace('오후 12', '낮 12', $date);
     }
