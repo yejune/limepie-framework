@@ -239,6 +239,14 @@ class Group extends \Limepie\Form\Generation\Fields
                 $addClass = ' ';
             }
 
+            $addStyle = '';
+
+            if (true === isset($propertyValue['style'])) {
+                $addStyle = ' ' . $propertyValue['style'];
+            } else {
+                $addStyle = ' ';
+            }
+
             if (true === isset($propertyValue['class_condition'])) {
                 $conditions = $propertyValue['class_condition'];
 
@@ -262,9 +270,9 @@ class Group extends \Limepie\Form\Generation\Fields
                 }
 
                 if (false === $conditionResult) {
-                    $addClass = ' ' . $conditions['else'];
+                    $addClass .= ' ' . $conditions['else'];
                 } else {
-                    $addClass = ' ' . $conditions['then'];
+                    $addClass .= ' ' . $conditions['then'];
                 }
             }
 
@@ -383,7 +391,7 @@ EOT;
                 }
 
                 $innerhtml .= <<<EOT
-                <div class="wrap-form-group{$addClass}" name="{$dotKey}.layer">
+                <div class="wrap-form-group{$addClass}" style="{$addStyle}" name="{$dotKey}.layer">
                     {$titleHtml}
                     <div class="form-group{$addClass2} {$sortableClass}">
                         {$elements}
