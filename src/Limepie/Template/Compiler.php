@@ -631,7 +631,7 @@ class Compiler
 
             switch ($current['name']) {
                 case 'string':
-                    if (false === \in_array($prev['name'], ['', 'left_parenthesis', 'left_bracket', 'assign', 'object_sign', 'static_object_sign', 'namespace_sigh', 'double_operator', 'operator', 'assoc_array', 'compare', 'quote_number_concat', 'assign', 'string_concat', 'comma', 'sam', 'sam2'], true)) {
+                    if (false === \in_array($prev['name'], ['', 'right_parenthesis', 'left_parenthesis', 'left_bracket', 'assign', 'object_sign', 'static_object_sign', 'namespace_sigh', 'double_operator', 'operator', 'assoc_array', 'compare', 'quote_number_concat', 'assign', 'string_concat', 'comma', 'sam', 'sam2'], true)) {
                         if (true === $this->debug) {
                             \pr($xpr, $prev, $current, __LINE__);
                         }
@@ -641,7 +641,12 @@ class Compiler
                         throw new Compiler\Exception(__LINE__ . ' parse error : file ' . $this->filename . ' line ' . $line . ' ' . $prev['org'] . $current['org']);
                     }
 
-                    if ('new' === $current['value'] && 'namespace_sigh' === $next['name']) {
+                    if(true === in_array($current['value'], ['int', 'string', 'float'], true)
+                    && $prev['name'] == 'left_parenthesis'
+                    && $next['name'] == 'right_parenthesis'
+                    ) {
+                        $xpr .= $current['value'];
+                    }elseif ('new' === $current['value'] && 'namespace_sigh' === $next['name']) {
                         $xpr .= 'new ';
                     // 클로저를 허용하지 않음. 그래서 string_concat 비교 보다 우선순위가 높음
                     } elseif (true === \in_array($next['name'], ['left_parenthesis', 'static_object_sign', 'namespace_sigh'], true)) {
@@ -797,6 +802,10 @@ class Compiler
 
                     break;
                 case 'number':
+
+                    if($current['value'] === $source) {
+                        return false;
+                    }
                     $last_stat = \array_pop($stat);
 
                     if ('assoc_array' === $prev['name']) {
