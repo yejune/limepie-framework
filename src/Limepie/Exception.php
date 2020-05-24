@@ -10,6 +10,10 @@ class Exception extends \Exception
 
     public $_previous;
 
+    public $displayMessage;
+
+    public $location;
+
     public function __construct($e, int $code = 0, \Throwable $previous = null)
     {
         if (true === \is_object($e)) {
@@ -27,9 +31,9 @@ class Exception extends \Exception
         }
     }
 
-    public function x__toString()
+    public function __toString()
     {
-        $s = \opcache_get_status();
+        // $s = \opcache_get_status();
 
         // echo '<pre>';
         // print_r($s);
@@ -82,6 +86,30 @@ class Exception extends \Exception
         // exit;
 
         return '';
+    }
+
+    public function setLocation($location)
+    {
+        $this->location = $location;
+
+        return $this;
+    }
+
+    public function getLocation()
+    {
+        return $this->location;
+    }
+
+    public function setDisplayMessage($message)
+    {
+        $this->displayMessage = $message;
+
+        return $this;
+    }
+
+    public function getDisplayMessage()
+    {
+        return $this->displayMessage ?: $this->getMessage();
     }
 
     public function getTraces()

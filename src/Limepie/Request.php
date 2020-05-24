@@ -120,8 +120,8 @@ class Request
                 $this->scheme = 'http';
             }
         }
-        return (string) $this->scheme;
 
+        return (string) $this->scheme;
     }
 
     public function getHost() : string
@@ -179,11 +179,11 @@ class Request
 
     public function getQueryString($append = '')
     {
-        if($this->query) {
+        if ($this->query) {
             return $append . \ltrim($this->query, $append);
-        } else {
-            return '';
         }
+
+        return '';
     }
 
     public function getSegments() : array
@@ -917,6 +917,59 @@ class Request
         return [];
     }
 
+    public function getDevice()
+    {
+        $device = '';
+
+        if (true === isset($_SERVER['HTTP_USER_AGENT'])) {
+            if (\stristr($_SERVER['HTTP_USER_AGENT'], 'ipad')) {
+                $device = 'ipad';
+            } elseif (\stristr($_SERVER['HTTP_USER_AGENT'], 'iphone') || \strstr($_SERVER['HTTP_USER_AGENT'], 'iphone')) {
+                $device = 'iphone';
+            } elseif (\stristr($_SERVER['HTTP_USER_AGENT'], 'android')) {
+                $device = 'android';
+            } else {
+                $device = '';
+            }
+        }
+
+        return $device;
+    }
+
+    public function getAppScheme()
+    {
+        $appScheme = '';
+
+        if (true === isset($_SERVER['HTTP_USER_AGENT'])) {
+            if (false !== \stripos($_SERVER['HTTP_USER_AGENT'], 'instagram')) {
+                $appScheme = 'instagram';
+            } elseif (false !== \stripos($_SERVER['HTTP_USER_AGENT'], 'kakaotalk')) {
+                $appScheme = 'kakaotalk';
+            } elseif (false !== \stripos($_SERVER['HTTP_USER_AGENT'], 'samsungpay')) {
+                $appScheme = 'samsungpay';
+            } elseif (false !== \stripos($_SERVER['HTTP_USER_AGENT'], 'naver')) {
+                $appScheme = 'naversearchapp';
+            } elseif (false !== \stripos($_SERVER['HTTP_USER_AGENT'], 'daum')) {
+                $appScheme = 'daumapps';
+            } elseif (false !== \stripos($_SERVER['HTTP_USER_AGENT'], 'fbav')) {
+                $appScheme = 'fb';
+            } elseif (false !== \stripos($_SERVER['HTTP_USER_AGENT'], 'fban')) {
+                $appScheme = 'fb';
+            } elseif (false !== \stripos($_SERVER['HTTP_USER_AGENT'], 'facebook')) {
+                $appScheme = 'fb';
+            } elseif (false !== \stripos($_SERVER['HTTP_USER_AGENT'], 'googlechromes')) {
+                $appScheme = 'googlechromes';
+            } elseif (false !== \stripos($_SERVER['HTTP_USER_AGENT'], 'slack')) {
+                $appScheme = 'slack';
+            } elseif (false !== \stripos($_SERVER['HTTP_USER_AGENT'], 'inapp')) {
+                $appScheme = 'inapp';
+            } else {
+                $appScheme = '';
+            }
+        }
+        return $appScheme;
+    }
+
     /**
      * Process a request header and return the one with best quality
      *
@@ -975,6 +1028,11 @@ class Request
         }
 
         return $returnedParts;
+    }
+
+    public function getIp()
+    {
+        return \Limepie\getIp();
     }
 }
 

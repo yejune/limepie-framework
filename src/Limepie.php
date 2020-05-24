@@ -25,6 +25,17 @@ function cprint($content, $nl2br = false)
     return $content;
 }
 
+function per1($point, $step) {
+    $diff = $point - $step + 1;
+    if($diff >= 1) {
+        return 100;
+    } elseif($diff > 0 && $diff < 1) {
+        return $diff*100;
+    } else {
+        return 0;
+    }
+}
+
 function date($date)
 {
     $format = 'Y년 m월 d일 A h:i';
@@ -81,6 +92,24 @@ function format_mobile($phone, $isMark = false)
           break;
     }
 }
+
+function format_mobile_mask($phone){
+    $phone = preg_replace("/[^0-9]/", "", $phone);
+    $length = strlen($phone);
+
+    switch($length){
+        case 11 :
+            return preg_replace("/([0-9]{3})([0-9])([0-9])([0-9])([0-9])([0-9])([0-9])([0-9])([0-9])/", "$1-**$4$5-**$8$9", $phone);
+            break;
+        case 10:
+            return preg_replace("/([0-9]{3})([0-9])([0-9])([0-9])([0-9])([0-9])([0-9])([0-9])/", "$1-*$3$4-**$7$8", $phone);
+            break;
+        default :
+            return $phone;
+            break;
+    }
+}
+
 /**
  * debug용 print_r
  *
@@ -234,12 +263,12 @@ function decode_file(string $filename) : array
                         $message = 'Invalid JSON syntax';
                 }
 
-                throw new \Exception($filename . ' ' . $message);
+                throw new \Limepie\Exception($filename . ' ' . $message);
             }
 
             break;
         default:
-            throw new \Exception($ext . ' not support');
+            throw new \Limepie\Exception($ext . ' not support');
 
             break;
     }
@@ -250,9 +279,10 @@ function decode_file(string $filename) : array
 function ceil(float $val, int $precision = 0)
 {
     $x = 1;
-    for($i=0;$i<$precision;$i++) {
+    for ($i = 0; $i < $precision; $i++) {
         $x = $x * 10;
     }
+
     return \ceil($val * $x) / $x;
 }
 
@@ -364,11 +394,11 @@ function refparse($arr = [], $basepath = '') : array
                             $yml2 = $yml2[$key2];
                         //pr($keys, $path, $key2, $yml2);
                         } else {
-                            throw new \Exception($key2 . ' not found');
+                            throw new \Limepie\Exception($key2 . ' not found');
                         }
                     }
                 } else {
-                    throw new \Exception($orgPath . ' ref error');
+                    throw new \Limepie\Exception($orgPath . ' ref error');
                 }
 
                 if ($yml2) {
@@ -553,9 +583,9 @@ function array_merge_recursive_distinct(array $array1, array $array2) : array
 
 function array_key_flatten($array)
 {
-    if (!isset($keys) || !\is_array($keys)) {
+    //if (!isset($array) || !\is_array($array)) {
         $keys = [];
-    }
+    //}
 
     foreach ($array as $key => $value) {
         $keys[] = $key;
@@ -569,13 +599,13 @@ function array_key_flatten($array)
 }
 function array_value_flatten($array)
 {
-    if (!isset($values) || !\is_array($values)) {
+    //if (!isset($array) || !\is_array($array)) {
         $values = [];
-    }
+    //}
 
     foreach ($array as $key => $value) {
         if (\is_array($value)) {
-            $values = \array_merge($values, \Limepie\array_values_flatten($value));
+            $values = \array_merge($values, \Limepie\array_value_flatten($value));
         } else {
             $values[] = $value;
         }
@@ -810,7 +840,7 @@ function mkdir($dir)
 
             if (false === \is_dir($createPath)) {
                 if (false === \mkdir($createPath)) {
-                    throw new \Exception('cannot create asserts directory <b>' . $createPath . '</b>');
+                    throw new \Limepie\Exception('cannot create asserts directory <b>' . $createPath . '</b>');
                 }
                 \chmod($createPath, 0777);
             }
@@ -818,19 +848,19 @@ function mkdir($dir)
     }
 }
 
-function is_boolean_typex($var)
-{
-    $result = \Peanut\is_boolean_type2($var);
+// function is_boolean_typex($var)
+// {
+//     $result = \Limepie\is_boolean_type2($var);
 
-    \ob_start(); // 출력 버퍼링을 켭니다
-    echo \var_dump($var);
-    $tmp = \ob_get_contents(); // 출력 버퍼의 내용을 반환
-    \ob_end_clean();
+//     \ob_start(); // 출력 버퍼링을 켭니다
+//     echo \var_dump($var);
+//     $tmp = \ob_get_contents(); // 출력 버퍼의 내용을 반환
+//     \ob_end_clean();
 
-    \pr($var, $result, $tmp);
+//     \pr($var, $result, $tmp);
 
-    return $result;
-}
+//     return $result;
+// }
 
 function is_boolean_type($var)
 {
@@ -1036,7 +1066,7 @@ function array_flatten_put($data, $flattenKey, $value)
         if (true === isset($d[$key])) {
             $d = &$d[$key];
         } else {
-            throw new \Exception('not found key');
+            throw new \Limepie\Exception('not found key');
         }
     }
     $d = $value;
@@ -1053,7 +1083,7 @@ function array_flatten_remove($data, $flattenKey)
         if (true === isset($d[$key])) {
             $d = &$d[$key];
         } else {
-            throw new \Exception('not found key');
+            throw new \Limepie\Exception('not found key');
         }
     }
     unset($d);
@@ -1080,6 +1110,11 @@ function is_ajax()
 function is_cli() : bool
 {
     return 'cli' === \php_sapi_name();
+}
+
+function random_uuid()
+{
+    return \uuid_create(\UUID_TYPE_RANDOM);
 }
 
 function uuid(int $type = \UUID_TYPE_TIME) : string
@@ -1359,4 +1394,131 @@ function flatten_diff($arraya, $arrayb)
     }
 
     return [$old, $new, $diff];
+}
+function getIp()
+{
+    if (true === isset($_SERVER['HTTP_CLIENT_IP'])) {
+        return $_SERVER['HTTP_CLIENT_IP'];
+    } elseif (true === isset($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+        return $_SERVER['HTTP_X_FORWARDED_FOR'];
+    } elseif (true === isset($_SERVER['HTTP_X_FORWARDED'])) {
+        return $_SERVER['HTTP_X_FORWARDED'];
+    } elseif (true === isset($_SERVER['HTTP_X_CLUSTER_CLIENT_IP'])) {
+        return $_SERVER['HTTP_X_CLUSTER_CLIENT_IP'];
+    } elseif (true === isset($_SERVER['HTTP_FORWARDED_FOR'])) {
+        return $_SERVER['HTTP_FORWARDED_FOR'];
+    } elseif (true === isset($_SERVER['HTTP_FORWARDED'])) {
+        return $_SERVER['HTTP_FORWARDED'];
+    } elseif (true === isset($_SERVER['REMOTE_ADDR'])) {
+        return $_SERVER['REMOTE_ADDR'];
+    }
+
+    return '127.0.0.1';
+}
+
+function inet6_ntop($ip)
+{
+    $l = \strlen($ip);
+
+    if (4 === $l or 16 === $l) {
+        return \inet_ntop(\pack('A' . $l, $ip));
+    }
+
+    return '';
+}
+
+function inet_aton($ip)
+{
+    $ip = \trim($ip);
+
+    if (\filter_var($ip, \FILTER_VALIDATE_IP, \FILTER_FLAG_IPV6)) {
+        return 0;
+    }
+
+    return \sprintf('%u', \ip2long($ip));
+}
+
+function inet_ntoa($num)
+{
+    $num = \trim($num);
+
+    if ('0' === $num) {
+        return '0.0.0.0';
+    }
+
+    return \long2ip(-(4294967295 - ($num - 1)));
+}
+
+/**
+ * Produce a version of the AES key in the same manor as MySQL
+ *
+ * @param string $key
+ *
+ * @return string
+ *
+ * @see https://www.smashingmagazine.com/2012/05/replicating-mysql-aes-encryption-methods-with-php/
+ */
+function mysql_aes_key($key)
+{
+    $bytes  = 16;
+    $newKey = \str_repeat(\chr(0), $bytes);
+    $length = \strlen($key);
+
+    for ($i = 0; $i < $length; $i++) {
+        $index          = $i % $bytes;
+        $newKey[$index] = $newKey[$index] ^ $key[$i];
+    }
+
+    return $newKey;
+}
+
+
+
+/**
+ * \putenv('AES_SALT=1234567890abcdefg');
+ * Programmatically mimic a MySQL AES_ENCRYPT() action as a way of avoiding unnecessary database calls
+ *
+ * @param string $decrypted
+ * @param string $cypher
+ * @param bool   $mySqlKey
+ *
+ * @return string
+ */
+function aes_encrypt($decrypted, $salt = null)
+{
+    if(null === $salt) {
+        if (!($salt = \getenv('AES_SALT'))) {
+            throw new \Limepie\Exception('Missing encryption salt.');
+        }
+    }
+
+    $key = \Limepie\mysql_aes_key($salt);
+
+    $cypher = 'aes-128-ecb';
+
+    return \openssl_encrypt($decrypted, $cypher, $key, \OPENSSL_RAW_DATA);
+}
+
+/**
+ * Programmatically mimic a MySQL AES_DECRYPT() action as a way of avoiding unnecessary database calls
+ *
+ * @param string $encrypted
+ * @param string $cypher
+ * @param bool   $mySqlKey
+ *
+ * @return string
+ */
+function aes_decrypt($encrypted, $salt = null)
+{
+    if(null === $salt) {
+        if (!($salt = \getenv('AES_SALT'))) {
+            throw new \Limepie\Exception('Missing encryption salt.');
+        }
+    }
+
+    $key = \Limepie\mysql_aes_key($salt);
+
+    $cypher = 'aes-128-ecb';
+
+    return \openssl_decrypt($encrypted, $cypher, $key, \OPENSSL_RAW_DATA);
 }

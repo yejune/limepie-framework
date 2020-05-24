@@ -4,7 +4,7 @@ namespace Limepie\Template;
 
 class Compiler
 {
-    private $debug = false;
+    private $debug = true;
 
     /**
      * @var array
@@ -51,11 +51,12 @@ class Compiler
      */
     public function execute($tpl, $fid, $tplPath, $cplPath, $cplHead)
     {
-        $this->permission      = $tpl->permission;
-        $this->phpengine       = $tpl->phpengine;
-        $this->debug           = $tpl->debug;
+        $this->permission = $tpl->permission;
+        $this->phpengine  = $tpl->phpengine;
+        $this->debug      = $tpl->debug;
 
         $this->filename        = $tplPath;
+        $this->basepath        = dirname($tplPath);
         $this->tpl_path        = $tplPath;
         $this->prefilter       = $tpl->prefilter;
         $this->postfilter      = $tpl->postfilter;
@@ -149,7 +150,7 @@ class Compiler
             \fclose($fpTpl);
         }
 
-        if (\trim((string)$this->prefilter)) {
+        if (\trim((string) $this->prefilter)) {
             $source = $this->filter($source, 'pre');
         }
 
@@ -214,10 +215,11 @@ class Compiler
                     }
 
                     $result = $this->compileStatement($tokens[$_index - 1], $line);
-                    if($result) {
+
+                    if ($result) {
                         if (1 === $result[0] || false === $result[1]) {
                             // \로 이스케이프 하는 등 원본에서 가공된 스트링을 돌려주기 위함
-                            $newTokens[$_index - 1] = $result[1];//$tokens[$_index - 1];
+                            $newTokens[$_index - 1] = $result[1]; //$tokens[$_index - 1];
                         } elseif (2 === $result[0]) {
                             $newTokens[$isOpen]     = '<?php ';
                             $newTokens[$_index - 1] = $result[1];
@@ -225,7 +227,6 @@ class Compiler
                         }
 
                         $isOpen = 0;
-
                     }
 
                     break;
@@ -261,7 +262,7 @@ class Compiler
         if ($match[1]) {
             // escape
             $result = [1, \substr($org, 1)];
-            //pr($match, $result);
+        //pr($match, $result);
         } else {
             switch ($match[2]) {
                 case '@':
@@ -279,17 +280,20 @@ class Compiler
                     } else {
                         $result = [1, $statement];
                     }
+
                     break;
                 case '#':
                     if (1 === \preg_match('`^#([\s+])?([a-zA-Z0-9\-_\.]+)$`', $statement)) {
                         $result = [2, $this->compileDefine($statement, $line)];
+                    } else if (1 === \preg_match('`^#([\s+])?([a-zA-Z0-9\-_\.]+) ([^ ]+)$`', $statement, $tmp)) {
+                        $result = [2, $this->compileInDefine('#'.$tmp[2], $this->basepath.'/'.$tmp[3], $line)];
                     } else {
                         $result = [1, $statement];
                     }
 
                     break;
                 case '*':
-                    $result = [2, '/*'.$statement.'*/'];
+                    $result = [2, '/*' . $statement . '*/'];
 
                     break;
                 case ':':
@@ -301,11 +305,9 @@ class Compiler
 
                     break;
                 case '*':
-
-                    $result = [2, '/*'.$statement.'*/'];
+                    $result = [2, '/*' . $statement . '*/'];
 
                     break;
-
                 case '/':
                     if (0 === \strpos($match[3], '/')) {
                         $result = [1, $org];
@@ -317,6 +319,7 @@ class Compiler
                         if (true === $this->debug) {
                             \pr($xpr, $prev, $current, __LINE__);
                         }
+
                         return false;
                     }
 
@@ -370,6 +373,10 @@ class Compiler
         return $result;
     }
 
+    public function compileInDefine($statement, $file, $line)
+    {
+        return "self::define('".\trim(\substr($statement, 1))."', '".$file."');self::printContents('" . \trim(\substr($statement, 1)) . "')";
+    }
     /**
      * @param $statement
      * @param $line
@@ -383,6 +390,7 @@ class Compiler
     {
         return "if(self::defined('" . \trim(\substr($statement, 2)) . "')) {{";
     }
+
     /**
      * @param  $statement
      * @param  $line
@@ -403,13 +411,13 @@ class Compiler
     public function compileLoop($statement, $line)
     {
         $result = $this->tokenizer(\substr($statement, 1), $line);
-        if(!$result) {
+
+        if (!$result) {
             throw new Compiler\Exception('Parse error: syntax error, loop는 {@row = array}...{/} 로 사용해주세요. 표현식은 안됩니다. line ' . $line);
         }
         $tokenizer = \explode('=', $result, 2);
 
         if (false === isset($tokenizer[0]) || false === isset($tokenizer[1])) {
-
             throw new Compiler\Exception('Parse error: syntax error, loop는 {@row = array}...{/} 로 사용해주세요. line ' . $line);
         }
 
@@ -641,12 +649,12 @@ class Compiler
                         throw new Compiler\Exception(__LINE__ . ' parse error : file ' . $this->filename . ' line ' . $line . ' ' . $prev['org'] . $current['org']);
                     }
 
-                    if(true === in_array($current['value'], ['int', 'string', 'float'], true)
-                    && $prev['name'] == 'left_parenthesis'
-                    && $next['name'] == 'right_parenthesis'
+                    if (true === \in_array($current['value'], ['int', 'string', 'float'], true)
+                    && 'left_parenthesis' === $prev['name']
+                    && 'right_parenthesis' === $next['name']
                     ) {
                         $xpr .= $current['value'];
-                    }elseif ('new' === $current['value'] && 'namespace_sigh' === $next['name']) {
+                    } elseif ('new' === $current['value'] && 'namespace_sigh' === $next['name']) {
                         $xpr .= 'new ';
                     // 클로저를 허용하지 않음. 그래서 string_concat 비교 보다 우선순위가 높음
                     } elseif (true === \in_array($next['name'], ['left_parenthesis', 'static_object_sign', 'namespace_sigh'], true)) {
@@ -802,8 +810,7 @@ class Compiler
 
                     break;
                 case 'number':
-
-                    if($current['value'] === $source) {
+                    if ($current['value'] === $source) {
                         return false;
                     }
                     $last_stat = \array_pop($stat);
@@ -851,6 +858,7 @@ class Compiler
                         if (true === $this->debug) {
                             \pr($xpr, $prev, $current, __LINE__);
                         }
+
                         return false;
 
                         throw new Compiler\Exception(__LINE__ . ' parse error : file ' . $this->filename . ' line ' . $line . ' ' . $prev['org'] . $current['org']);
@@ -862,15 +870,17 @@ class Compiler
                     if (false === \in_array($prev['name'], ['right_bracket', 'string', 'right_parenthesis'], true)) {
                         throw new Compiler\Exception(__LINE__ . ' parse error : file ' . $this->filename . ' line ' . $line . ' ' . $prev['org'] . $current['org']);
                     }
+
                     $xpr .= $current['value'];
 
                     break;
                 case 'namespace_sigh':
-                    if (false === \in_array($prev['name'], ['static_object_sign', 'left_parenthesis', 'string', 'assign', 'comma', 'operator', ''], true)) {
+                    if (false === \in_array($prev['name'], ['compare', 'static_object_sign', 'left_parenthesis', 'string', 'assign', 'comma', 'operator', ''], true)) {
                         if (true === $this->debug) {
                             \pr($xpr, $prev, $current, __LINE__);
                         }
-                        return false;
+
+                        //return false;
 
                         throw new Compiler\Exception(__LINE__ . ' parse error : file ' . $this->filename . ' line ' . $line . ' ' . $prev['org'] . $current['org']);
                     }
@@ -894,6 +904,7 @@ class Compiler
                         if (true === $this->debug) {
                             \pr($xpr, $prev, $current, __LINE__);
                         }
+
                         return false;
 
                         throw new Compiler\Exception(__LINE__ . ' parse error : file ' . $this->filename . ' line ' . $line . ' ' . $prev['org'] . $current['org']);
@@ -982,6 +993,7 @@ class Compiler
                         if (true === $this->debug) {
                             \pr($xpr, $prev, $current, __LINE__);
                         }
+
                         return false;
 
                         throw new Compiler\Exception(__LINE__ . ' parse error : file ' . $this->filename . ' line ' . $line . ' ' . $prev['org'] . $current['org']);
@@ -991,7 +1003,8 @@ class Compiler
                     break;
                 case 'comma':
                     $last_stat = \array_pop($stat);
-                    if($last_stat) {
+
+                    if ($last_stat) {
                         if ($last_stat['name'] && 'left_bracket' === $last_stat['name'] && 0 < $last_stat['key']) {
                             // ][ ,] 면 배열키이므로 ,가 있으면 안됨
                             if (\in_array($token[$last_stat['key'] - 1]['name'], ['right_bracket', 'string'], true)) {
@@ -1004,6 +1017,7 @@ class Compiler
                             if (true === $this->debug) {
                                 \pr($xpr, $prev, $current, __LINE__);
                             }
+
                             return false;
 
                             throw new Compiler\Exception(__LINE__ . ' parse error : file ' . $this->filename . ' line ' . $line . ' ' . $prev['org'] . $current['org']);
@@ -1027,7 +1041,7 @@ class Compiler
         if (0 < \count($stat)) {
             $last_stat = \array_pop($stat);
 
-            if($last_stat) {
+            if ($last_stat) {
                 if ('left_parenthesis' === $last_stat['name']) {
                     throw new Compiler\Exception(__LINE__ . ' parse error : file ' . $this->filename . ' line ' . $line . ' ' . $current['org']);
                 } elseif ('left_bracket' === $last_stat['name']) {

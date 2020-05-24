@@ -51,6 +51,21 @@ class Bcmath
         return \bccomp((string) $a, (string) $b, static::getScale());
     }
 
+    public static function lcomp($a, $b) : bool
+    {
+        return 1 === static::comp($a, $b);
+    }
+
+    public static function rcomp($a, $b) : bool
+    {
+        return -1 === static::comp($a, $b);
+    }
+
+    public static function equal($a, $b) : bool
+    {
+        return 0 === static::comp($a, $b);
+    }
+
     public static function sum(array $array) : string
     {
         $sum = '0';

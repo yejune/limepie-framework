@@ -230,6 +230,62 @@ class Mysql extends \Pdo
 
         return false;
     }
+    public function closeCursor($oStm) {
+        do $oStm->fetchAll();
+        while ($oStm->nextRowSet());
+    }
+    public function call($statement, $bindParameters = [], $mode = \PDO::FETCH_ASSOC)
+    {
+        try {
+            if ($this->debug) {
+                \Limepie\Timer::start();
+            }
+            // $emul = parent::getAttribute(\PDO::ATTR_EMULATE_PREPARES);
+
+            // if (false === $emul) {
+            //     parent::setAttribute(\PDO::ATTR_EMULATE_PREPARES, true);
+            // }
+            $stmt   = self::execute($statement, $bindParameters);
+
+            // if (false === $emul) {
+            //     parent::setAttribute(\PDO::ATTR_EMULATE_PREPARES, $emul);
+            // }
+
+            $mode   = self::getMode($mode);
+
+            $streets = [];
+            while ($stmt->columnCount()) {
+                try {
+                    $rows = $stmt->fetchAll($mode);
+                    if ($rows) {
+                        $streets = $rows;
+                    }
+                    $stmt->nextRowset();
+                } catch (\PDOException $e) {
+                    throw new Exception\Execute($e, $this->getErrorFormat($statement, $bindParameters));
+                }
+            };
+
+            $stmt->closeCursor();
+
+            if ($this->debug) {
+                $timer = \Limepie\Timer::stop();
+                \pr($timer, $this->getErrorFormat($statement, $bindParameters));
+            }
+            if (true === \is_array($streets)) {
+                foreach ($streets as $key => $value) {
+                    foreach($value as $row) {
+                        return $row;
+                    }
+                }
+            }
+
+            return false;
+        } catch (\PDOException $e) {
+            pr($e);
+            throw new Exception\Execute($e, $this->getErrorFormat($statement, $bindParameters));
+        }
+    }
 
     public function begin()
     {
@@ -298,7 +354,30 @@ class Mysql extends \Pdo
             throw $e;
         }
     }
+    public function transaction2(callable $callback)
+    {
+        try {
+            if ($this->begin()) {
+                $return   = $callback($this);
+                //$return = \call_user_func_array($callback, [$this]);
 
+                //if (false === $return) {
+                if (!$return) {
+                    throw new Exception\Transaction('Transaction Failure', 50003);
+                }
+
+                if ($this->commit()) {
+                    return $return;
+                }
+            }
+
+            throw new Exception\Transaction('Transaction Failure', 50005);
+        } catch (\Throwable $e) {
+            $this->rollback();
+
+            throw $e;
+        }
+    }
     /**
      * @param $descriptor
      * @param mixed $connect
@@ -332,13 +411,22 @@ class Mysql extends \Pdo
         }
 
         //pr($statement, $bindParameters);
-        $result = $stmt->execute($binds);
+        try {
+            $result = $stmt->execute($binds);
 
-        if (true === $ret) {
-            $stmt->closeCursor();
+            if (true === $ret) {
+                $stmt->closeCursor();
 
-            return $result;
+                return $result;
+            }
+        } catch (\Limepie\Exception $e) {
+            throw ($e)->setDisplayMessage($stmt->errorInfo()[2]);
+            //throw new \Limepie\Exception($e->getMessage(). ' ' .$stmt->errorInfo()[2]);
+        } catch (\Throwable $e) {
+            throw (new \Limepie\Exception($e))->setDisplayMessage($stmt->errorInfo()[2]);
+            //throw new \Limepie\Exception($e->getMessage(). ' ' .$stmt->errorInfo()[2]);
         }
+
 
         return $stmt;
     }
