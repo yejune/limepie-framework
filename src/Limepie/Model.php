@@ -581,7 +581,7 @@ class Model implements \Iterator, \ArrayAccess, \Countable
                     $condition = "`{$this->tableName}`.`{$whereKey2}` like concat('%',:{$whereKey},'%')";
                 } else {
                     if (null === $whereValue) {
-                        $condition = "`{$this->tableName}`.`{$whereKey}` IS NULLl";
+                        $condition = "`{$this->tableName}`.`{$whereKey}` IS NULL";
                     } else {
                         $condition = "`{$this->tableName}`.`{$whereKey}` = :{$whereKey}";
                     }
