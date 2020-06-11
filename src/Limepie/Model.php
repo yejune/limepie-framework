@@ -912,7 +912,7 @@ class Model implements \Iterator, \ArrayAccess, \Countable
     }
 
     // TODO: db에서 가져온것과 비교해서 바뀌지 않으면 업데이트 하지 말기
-    public function update()
+    public function update($checkUpdatedTs = false)
     {
         $fields = [];
 
@@ -972,6 +972,11 @@ class Model implements \Iterator, \ArrayAccess, \Countable
             WHERE
             `{$where}` = :{$where}
         SQL;
+
+        if (true === $checkUpdatedTs) {
+            $sql .= ' AND updated_ts = :check_updated_ts';
+            $binds[':check_updated_ts'] = $this->attributes['updated_ts'];
+        }
 
         if ($this->getConnect()->set($sql, $binds)) {
             return $this;

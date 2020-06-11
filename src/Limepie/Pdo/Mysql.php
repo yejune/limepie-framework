@@ -142,6 +142,11 @@ class Mysql extends \Pdo
         }
     }
 
+    public function last_row_count()
+    {
+        return self::get('SELECT FOUND_ROWS()');
+    }
+
     /*
     \Peanut\Phalcon\Db::name('master')->sets(
         'insert into test (a,b,c,d) values (:a,:b,:c,:d)', [
@@ -230,10 +235,14 @@ class Mysql extends \Pdo
 
         return false;
     }
-    public function closeCursor($oStm) {
-        do $oStm->fetchAll();
-        while ($oStm->nextRowSet());
+
+    public function closeCursor($oStm)
+    {
+        do {
+            $oStm->fetchAll();
+        } while ($oStm->nextRowSet());
     }
+
     public function call($statement, $bindParameters = [], $mode = \PDO::FETCH_ASSOC)
     {
         try {
@@ -245,18 +254,20 @@ class Mysql extends \Pdo
             // if (false === $emul) {
             //     parent::setAttribute(\PDO::ATTR_EMULATE_PREPARES, true);
             // }
-            $stmt   = self::execute($statement, $bindParameters);
+            $stmt = self::execute($statement, $bindParameters);
 
             // if (false === $emul) {
             //     parent::setAttribute(\PDO::ATTR_EMULATE_PREPARES, $emul);
             // }
 
-            $mode   = self::getMode($mode);
+            $mode = self::getMode($mode);
 
             $streets = [];
+
             while ($stmt->columnCount()) {
                 try {
                     $rows = $stmt->fetchAll($mode);
+
                     if ($rows) {
                         $streets = $rows;
                     }
@@ -264,7 +275,7 @@ class Mysql extends \Pdo
                 } catch (\PDOException $e) {
                     throw new Exception\Execute($e, $this->getErrorFormat($statement, $bindParameters));
                 }
-            };
+            }
 
             $stmt->closeCursor();
 
@@ -272,9 +283,10 @@ class Mysql extends \Pdo
                 $timer = \Limepie\Timer::stop();
                 \pr($timer, $this->getErrorFormat($statement, $bindParameters));
             }
+
             if (true === \is_array($streets)) {
                 foreach ($streets as $key => $value) {
-                    foreach($value as $row) {
+                    foreach ($value as $row) {
                         return $row;
                     }
                 }
@@ -282,7 +294,8 @@ class Mysql extends \Pdo
 
             return false;
         } catch (\PDOException $e) {
-            pr($e);
+            \pr($e);
+
             throw new Exception\Execute($e, $this->getErrorFormat($statement, $bindParameters));
         }
     }
@@ -354,11 +367,12 @@ class Mysql extends \Pdo
             throw $e;
         }
     }
+
     public function transaction2(callable $callback)
     {
         try {
             if ($this->begin()) {
-                $return   = $callback($this);
+                $return = $callback($this);
                 //$return = \call_user_func_array($callback, [$this]);
 
                 //if (false === $return) {
@@ -378,6 +392,7 @@ class Mysql extends \Pdo
             throw $e;
         }
     }
+
     /**
      * @param $descriptor
      * @param mixed $connect
@@ -401,8 +416,9 @@ class Mysql extends \Pdo
 
         foreach ($bindParameters as $key => $value) {
             if (true === \is_array($value)) {
-                foreach($value as $r) {
+                foreach ($value as $r) {
                     $binds[$key] = $r;
+
                     break;
                 }
             } else {
@@ -426,7 +442,6 @@ class Mysql extends \Pdo
             throw (new \Limepie\Exception($e))->setDisplayMessage($stmt->errorInfo()[2]);
             //throw new \Limepie\Exception($e->getMessage(). ' ' .$stmt->errorInfo()[2]);
         }
-
 
         return $stmt;
     }
