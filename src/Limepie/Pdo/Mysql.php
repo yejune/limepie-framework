@@ -8,6 +8,24 @@ class Mysql extends \Pdo
 
     public $debug = false;
 
+    /**
+     * @param $descriptor
+     * @param mixed $connect
+     * @param mixed $statement
+     * @param mixed $bindParameters
+     * @param mixed $ret
+     */
+    // public function connect(string $dsn, string $username = '', string $passwd = '', array $options =[])
+    // {
+    //     try {
+    //         $this->_pdo = new \Pdo($dsn, $username, $password, $options);
+    //     } catch (\Throwable $e) {
+    //         throw $e;
+    //     }
+    // }
+
+    public $rowCount = 0;
+
     public function __construct(string $dsn, string $username = '', string $passwd = '', array $options = [])
     {
         $this->info = \parse_url($dsn);
@@ -144,7 +162,10 @@ class Mysql extends \Pdo
 
     public function last_row_count()
     {
-        return self::get('SELECT FOUND_ROWS()');
+        return $this->rowCount;
+        $result = self::get1('SELECT FOUND_ROWS()');
+
+        return $result;
     }
 
     /*
@@ -393,22 +414,6 @@ class Mysql extends \Pdo
         }
     }
 
-    /**
-     * @param $descriptor
-     * @param mixed $connect
-     * @param mixed $statement
-     * @param mixed $bindParameters
-     * @param mixed $ret
-     */
-    // public function connect(string $dsn, string $username = '', string $passwd = '', array $options =[])
-    // {
-    //     try {
-    //         $this->_pdo = new \Pdo($dsn, $username, $password, $options);
-    //     } catch (\Throwable $e) {
-    //         throw $e;
-    //     }
-    // }
-
     private function execute($statement, $bindParameters = [], $ret = false)
     {
         $stmt  = parent::prepare($statement);
@@ -428,7 +433,8 @@ class Mysql extends \Pdo
 
         //pr($statement, $bindParameters);
         try {
-            $result = $stmt->execute($binds);
+            $result         = $stmt->execute($binds);
+            $this->rowCount = $stmt->rowCount();
 
             if (true === $ret) {
                 $stmt->closeCursor();
