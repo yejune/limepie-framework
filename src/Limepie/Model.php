@@ -479,11 +479,8 @@ class Model implements \Iterator, \ArrayAccess, \Countable
         $condition = '';
         $binds     = [];
 
-
         //pr($whereKey, $arguments);
         if (false !== \strpos($whereKey, '_and_')) {
-
-
             $whereKeys = \explode('_and_', $whereKey);
             $conds     = [];
             $binds     = [];
@@ -511,13 +508,11 @@ class Model implements \Iterator, \ArrayAccess, \Countable
                     } elseif (0 === \strpos($key, 'eq_')) {
                         $conds[] = "`{$this->tableName}`." . '`' . $key2 . '`' . ' = :' . $key;
                     } elseif (0 === \strpos($key, 'ne_')) {
-
                         if (null === $arguments[$index]) {
                             $conds[] = "`{$this->tableName}`." . '`' . $key2 . '`' . ' IS NOT NULL';
                         } else {
                             $conds[] = "`{$this->tableName}`." . '`' . $key2 . '`' . ' != :' . $key;
                         }
-
                     } elseif (0 === \strpos($key, 'lk_')) {
                         $conds[] = "`{$this->tableName}`." . '`' . $key2 . '`' . ' like concat("%", :' . $key . ', "%")';
                     } else {
@@ -544,7 +539,7 @@ class Model implements \Iterator, \ArrayAccess, \Countable
             }
             $condition = \implode(' AND ', $conds);
 
-            //pr($condition);
+        //pr($condition);
         } elseif (true === isset($arguments[0]) || ($arguments && null === $arguments[0])) {
             $whereValue = $arguments[0];
 
@@ -571,7 +566,6 @@ class Model implements \Iterator, \ArrayAccess, \Countable
                 } elseif (0 === \strpos($whereKey, 'eq_')) {
                     $condition = "`{$this->tableName}`.`{$whereKey2}` = :{$whereKey}";
                 } elseif (0 === \strpos($whereKey, 'ne_')) {
-
                     if (null === $whereValue) {
                         $condition = "`{$this->tableName}`.`{$whereKey2}` IS NOT NULL";
                     } else {
@@ -602,6 +596,7 @@ class Model implements \Iterator, \ArrayAccess, \Countable
         if ($condition) {
             $condition = 'WHERE ' . $condition;
         }
+
         return [$condition, $binds];
     }
 
@@ -843,12 +838,13 @@ class Model implements \Iterator, \ArrayAccess, \Countable
         foreach ($this->allFields as $field) {
             if ($this->sequenceName === $field) {
             } else {
-                if ('ip' === $field) {
+                if ('created_ts' === $field || 'updated_ts' === $field) {
+                } elseif ('ip' === $field) {
                     $fields[]            = '`' . $field . '`';
                     $binds[':' . $field] = \Limepie\getIp();
                     $values[]            = 'inet6_aton(:' . $field . ')';
-                } else if (true === \array_key_exists($field, $this->attributes)) {
-                //if (true === isset($this->attributes[$field])) {
+                } elseif (true === \array_key_exists($field, $this->attributes)) {
+                    //if (true === isset($this->attributes[$field])) {
                     $value = $this->attributes[$field];
 
                     if (true === isset($this->dataTypes[$field])) {
@@ -880,7 +876,7 @@ class Model implements \Iterator, \ArrayAccess, \Countable
                     $fields[]            = '`' . $field . '`';
                     $binds[':' . $field] = $value;
                     $values[]            = ':' . $field;
-                // }
+                    // }
                 }
             }
         }
@@ -927,11 +923,12 @@ class Model implements \Iterator, \ArrayAccess, \Countable
         foreach ($this->allFields as $field) {
             if ($this->sequenceName === $field) {
             } else {
-                if ('ip' === $field) {
+                if ('created_ts' === $field || 'updated_ts' === $field) {
+                } elseif ('ip' === $field) {
                     $fields[]            = "`{$this->tableName}`." . '`' . $field . '` = inet6_aton(:' . $field . ')';
                     $binds[':' . $field] = \Limepie\getIp();
-                } else if (true === \array_key_exists($field, $this->attributes)) {
-                //if (true === isset($this->attributes[$field])) {
+                } elseif (true === \array_key_exists($field, $this->attributes)) {
+                    //if (true === isset($this->attributes[$field])) {
                     $value = $this->attributes[$field];
 
                     if (true === isset($this->dataTypes[$field])) {
@@ -961,7 +958,7 @@ class Model implements \Iterator, \ArrayAccess, \Countable
                     // } else {
                     $fields[]            = "`{$this->tableName}`." . '`' . $field . '` = :' . $field;
                     $binds[':' . $field] = $value;
-                // }
+                    // }
                 }
             }
         }
@@ -1405,7 +1402,7 @@ class Model implements \Iterator, \ArrayAccess, \Countable
         } elseif (0 === \strpos($whereKey, 'ne_')) {
             $this->bindcount++;
 
-            if($arguments[0] === null) {
+            if (null === $arguments[0]) {
                 $this->conditions[] = [
                     'string' => $whereKey . ' IS NOT NULL',
                 ];
@@ -1429,15 +1426,14 @@ class Model implements \Iterator, \ArrayAccess, \Countable
         } else {
             $this->bindcount++;
 
-
-            if($arguments[0] === null) {
+            if (null === $arguments[0]) {
                 $this->conditions[] = [
                     'string' => $key . ' IS NULL',
                 ];
             } else {
                 $this->conditions[] = [
                     'string' => $key . ' = :' . $key . $this->bindcount,
-                    'bind'    => [
+                    'bind'   => [
                         $key . $this->bindcount => $arguments[0],
                     ],
                 ];
@@ -1479,14 +1475,13 @@ class Model implements \Iterator, \ArrayAccess, \Countable
         return $this;
     }
 
-
     private function buildNe($name, $arguments)
     {
         $key = \Limepie\decamelize(\substr($name, 2));
 
         $this->bindcount++;
 
-        if($arguments[0] === null) {
+        if (null === $arguments[0]) {
             $this->conditions[] = [
                 'string' => $key . ' IS NOT NULL',
                 'bind'   => [

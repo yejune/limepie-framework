@@ -96,7 +96,7 @@ class Bcmath
     {
         if (false !== \strpos($number, '.')) {
             if (\preg_match("~\.[0]+$~", $number)) {
-                return \bcround($number, 0);
+                return static::bcround($number, 0);
             }
 
             if ('-' !== $number[0]) {
@@ -113,7 +113,7 @@ class Bcmath
     {
         if (false !== \strpos($number, '.')) {
             if (\preg_match("~\.[0]+$~", $number)) {
-                return \bcround($number, 0);
+                return static::bcround($number, 0);
             }
 
             if ('-' !== $number[0]) {
