@@ -19,10 +19,11 @@ class Execute extends \Limepie\Exception
     public function currentTrace()
     {
         $trace = $this->getTrace();
+
         foreach ($trace as $row) {
 //            if (false === \strpos($row['file'], '/limepie-framework/src/')) {
-                return $row;
- //           }
+            return $row;
+            //           }
         }
 
         return false;

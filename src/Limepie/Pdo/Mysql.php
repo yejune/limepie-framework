@@ -382,6 +382,27 @@ class Mysql extends \Pdo
             }
 
             throw new Exception\Transaction('Transaction Failure', 50005);
+        } catch (\PDOException $e) {
+            $this->rollback();
+            // 데드락에 의한 실패일 경우 한번더 실행
+            if (40001 === $e->errorInfo[0]) {
+                if ($this->begin()) {
+                    $callback = $callback->bindTo($this);
+                    $return   = $callback();
+                    //$return = \call_user_func_array($callback, [$this]);
+
+                    //if (false === $return) {
+                    if (!$return) {
+                        throw $e;
+                    }
+
+                    if ($this->commit()) {
+                        return $return;
+                    }
+                }
+            }
+
+            throw $e;
         } catch (\Throwable $e) {
             $this->rollback();
 
@@ -407,6 +428,26 @@ class Mysql extends \Pdo
             }
 
             throw new Exception\Transaction('Transaction Failure', 50005);
+        } catch (\PDOException $e) {
+            $this->rollback();
+            // 데드락에 의한 실패일 경우 한번더 실행
+            if (40001 === $e->errorInfo[0]) {
+                if ($this->begin()) {
+                    $return = $callback($this);
+                    //$return = \call_user_func_array($callback, [$this]);
+
+                    //if (false === $return) {
+                    if (!$return) {
+                        throw $e;
+                    }
+
+                    if ($this->commit()) {
+                        return $return;
+                    }
+                }
+            }
+
+            throw $e;
         } catch (\Throwable $e) {
             $this->rollback();
 
@@ -442,10 +483,12 @@ class Mysql extends \Pdo
                 return $result;
             }
         } catch (\Limepie\Exception $e) {
-            throw ($e)->setDisplayMessage($stmt->errorInfo()[2]);
+            throw new Exception\Execute($e, $this->getErrorFormat($statement, $bindParameters));
+            //throw ($e)->setDisplayMessage($stmt->errorInfo()[2]);
             //throw new \Limepie\Exception($e->getMessage(). ' ' .$stmt->errorInfo()[2]);
         } catch (\Throwable $e) {
-            throw (new \Limepie\Exception($e))->setDisplayMessage($stmt->errorInfo()[2]);
+            throw new Exception\Execute($e, $this->getErrorFormat($statement, $bindParameters));
+            //throw (new \Limepie\Exception($e))->setDisplayMessage($stmt->errorInfo()[2]);
             //throw new \Limepie\Exception($e->getMessage(). ' ' .$stmt->errorInfo()[2]);
         }
 
