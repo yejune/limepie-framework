@@ -386,6 +386,10 @@ class Mysql extends \Pdo
             $this->rollback();
             // 데드락에 의한 실패일 경우 한번더 실행
             if (40001 === $e->errorInfo[0]) {
+                //1초 지연
+                $cho = 1000000;
+                \usleep($cho / 2);
+
                 if ($this->begin()) {
                     $callback = $callback->bindTo($this);
                     $return   = $callback();
@@ -432,6 +436,10 @@ class Mysql extends \Pdo
             $this->rollback();
             // 데드락에 의한 실패일 경우 한번더 실행
             if (40001 === $e->errorInfo[0]) {
+                //1초 지연
+                $cho = 1000000;
+                \usleep($cho / 2);
+
                 if ($this->begin()) {
                     $return = $callback($this);
                     //$return = \call_user_func_array($callback, [$this]);
