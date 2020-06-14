@@ -25,15 +25,17 @@ function cprint($content, $nl2br = false)
     return $content;
 }
 
-function per1($point, $step) {
+function per1($point, $step)
+{
     $diff = $point - $step + 1;
-    if($diff >= 1) {
+
+    if (1 <= $diff) {
         return 100;
-    } elseif($diff > 0 && $diff < 1) {
-        return $diff*100;
-    } else {
-        return 0;
+    } elseif (0 < $diff && 1 > $diff) {
+        return $diff * 100;
     }
+
+    return 0;
 }
 
 function date($date)
@@ -56,6 +58,7 @@ function date($date)
 
 function unserialize($value)
 {
+    $org        = $value;
     $value = \preg_replace_callback(
         '/(?<=^|\{|;)s:(\d+):\"(.*?)\";(?=[asbdiO]\:\d|N;|\}|$)/s',
         function($m) {
@@ -64,8 +67,13 @@ function unserialize($value)
         $value
     );
 
-    return \unserialize($value);
+    try {
+        return \unserialize($value);
+    } catch (\Exception $e) {
+        return \unserialize($org);
+    }
 }
+
 function format_mobile($phone, $isMark = false)
 {
     $phone  = \preg_replace('/[^0-9]/', '', $phone);
@@ -93,19 +101,23 @@ function format_mobile($phone, $isMark = false)
     }
 }
 
-function format_mobile_mask($phone){
-    $phone = preg_replace("/[^0-9]/", "", $phone);
-    $length = strlen($phone);
+function format_mobile_mask($phone)
+{
+    $phone  = \preg_replace('/[^0-9]/', '', $phone);
+    $length = \strlen($phone);
 
-    switch($length){
-        case 11 :
-            return preg_replace("/([0-9]{3})([0-9])([0-9])([0-9])([0-9])([0-9])([0-9])([0-9])([0-9])/", "$1-**$4$5-**$8$9", $phone);
+    switch ($length) {
+        case 11:
+            return \preg_replace('/([0-9]{3})([0-9])([0-9])([0-9])([0-9])([0-9])([0-9])([0-9])([0-9])/', '$1-**$4$5-**$8$9', $phone);
+
             break;
         case 10:
-            return preg_replace("/([0-9]{3})([0-9])([0-9])([0-9])([0-9])([0-9])([0-9])([0-9])/", "$1-*$3$4-**$7$8", $phone);
+            return \preg_replace('/([0-9]{3})([0-9])([0-9])([0-9])([0-9])([0-9])([0-9])([0-9])/', '$1-*$3$4-**$7$8', $phone);
+
             break;
-        default :
+        default:
             return $phone;
+
             break;
     }
 }
@@ -584,7 +596,7 @@ function array_merge_recursive_distinct(array $array1, array $array2) : array
 function array_key_flatten($array)
 {
     //if (!isset($array) || !\is_array($array)) {
-        $keys = [];
+    $keys = [];
     //}
 
     foreach ($array as $key => $value) {
@@ -600,7 +612,7 @@ function array_key_flatten($array)
 function array_value_flatten($array)
 {
     //if (!isset($array) || !\is_array($array)) {
-        $values = [];
+    $values = [];
     //}
 
     foreach ($array as $key => $value) {
@@ -1472,21 +1484,20 @@ function mysql_aes_key($key)
     return $newKey;
 }
 
-
-
 /**
  * \putenv('AES_SALT=1234567890abcdefg');
  * Programmatically mimic a MySQL AES_ENCRYPT() action as a way of avoiding unnecessary database calls
  *
- * @param string $decrypted
- * @param string $cypher
- * @param bool   $mySqlKey
+ * @param string     $decrypted
+ * @param string     $cypher
+ * @param bool       $mySqlKey
+ * @param mixed|null $salt
  *
  * @return string
  */
 function aes_encrypt($decrypted, $salt = null)
 {
-    if(null === $salt) {
+    if (null === $salt) {
         if (!($salt = \getenv('AES_SALT'))) {
             throw new \Limepie\Exception('Missing encryption salt.');
         }
@@ -1502,15 +1513,16 @@ function aes_encrypt($decrypted, $salt = null)
 /**
  * Programmatically mimic a MySQL AES_DECRYPT() action as a way of avoiding unnecessary database calls
  *
- * @param string $encrypted
- * @param string $cypher
- * @param bool   $mySqlKey
+ * @param string     $encrypted
+ * @param string     $cypher
+ * @param bool       $mySqlKey
+ * @param mixed|null $salt
  *
  * @return string
  */
 function aes_decrypt($encrypted, $salt = null)
 {
-    if(null === $salt) {
+    if (null === $salt) {
         if (!($salt = \getenv('AES_SALT'))) {
             throw new \Limepie\Exception('Missing encryption salt.');
         }
