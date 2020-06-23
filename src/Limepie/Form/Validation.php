@@ -30,6 +30,7 @@ class Validation
         'range'       => 'Please enter a value between {0} and {1}.',
         'max'         => 'Please enter a value less than or equal to {0}.',
         'min'         => 'Please enter a value greater than or equal to {0}.',
+        'maxcount'    => 'Please enter a value less than or equal to {0}.',
         'mincount'    => 'Please enter a value greater than or equal to {0}.',
         'step'        => 'Please enter a multiple of {0}.',
         'unique'      => 'unique',
@@ -77,8 +78,9 @@ class Validation
         $valid = true;
 
         foreach ($specs['properties'] as $propertyKey => $propertyValue) {
-            $fixPropertyKey = $propertyKey;
-            $isArray        = false;
+            $propertyValue['key'] = $propertyKey;
+            $fixPropertyKey       = $propertyKey;
+            $isArray              = false;
 
             if (false !== \strpos((string) $fixPropertyKey, '[]')) {
                 $fixPropertyKey = \str_replace('[]', '', $fixPropertyKey);
@@ -281,7 +283,7 @@ class Validation
         if (true === isset($property['rules'])) {
             foreach ($property['rules'] as $ruleName => $ruleParam) {
                 if ($callback = $this->getMethod($ruleName)) {
-                    //([$value, $cleanFieldName, $ruleParam]);
+                    //\pr([$name, $property, $ruleName, $value,  $ruleParam]);
 
                     if ($callback($value, $name, $ruleParam)) {
                         //\pr($ruleName, $value, $name, $ruleParam);
@@ -311,7 +313,7 @@ class Validation
                     }
                 } else {
                     $this->errors[] = [
-                        'field'   => $name,
+                        'field'   => $property['key'],
                         'type'    => $ruleName,
                         'param'   => $ruleParam,
                         'value'   => $value,
@@ -416,13 +418,30 @@ Validation::addMethod('mincount', function($value, $name, $param) {
 
     if (true === \is_array($elements)) {
         foreach ($elements as $val) {
-            if ($val) {
+            if (0 < \strlen($val)) {
                 $count++;
             }
         }
     }
 
     return $this->optional($value) || $count >= $param;
+
+    return $count >= $param;
+});
+
+Validation::addMethod('maxcount', function($value, $name, $param) {
+    $elements = $this->getValue($name);
+    $count = 0;
+
+    if (true === \is_array($elements)) {
+        foreach ($elements as $val) {
+            if (0 < \strlen($val)) {
+                $count++;
+            }
+        }
+    }
+
+    return $this->optional($value) || $count <= $param;
 
     return $count >= $param;
 });
