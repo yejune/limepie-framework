@@ -369,9 +369,7 @@ class Mysql extends \Pdo
             if ($this->begin()) {
                 $callback = $callback->bindTo($this);
                 $return   = $callback();
-                //$return = \call_user_func_array($callback, [$this]);
 
-                //if (false === $return) {
                 if (!$return) {
                     throw new Exception\Transaction('Transaction Failure', 50003);
                 }
@@ -393,9 +391,7 @@ class Mysql extends \Pdo
                 if ($this->begin()) {
                     $callback = $callback->bindTo($this);
                     $return   = $callback();
-                    //$return = \call_user_func_array($callback, [$this]);
 
-                    //if (false === $return) {
                     if (!$return) {
                         throw $e;
                     }
@@ -419,9 +415,7 @@ class Mysql extends \Pdo
         try {
             if ($this->begin()) {
                 $return = $callback($this);
-                //$return = \call_user_func_array($callback, [$this]);
 
-                //if (false === $return) {
                 if (!$return) {
                     throw new Exception\Transaction('Transaction Failure', 50003);
                 }
@@ -442,9 +436,7 @@ class Mysql extends \Pdo
 
                 if ($this->begin()) {
                     $return = $callback($this);
-                    //$return = \call_user_func_array($callback, [$this]);
 
-                    //if (false === $return) {
                     if (!$return) {
                         throw $e;
                     }
