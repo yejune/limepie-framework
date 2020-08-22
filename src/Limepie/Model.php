@@ -138,6 +138,17 @@ class Model implements \Iterator, \ArrayAccess, \Countable
         $this->attributes[$field] = $attribute;
     }
 
+    public function setAttributeses(array $attributes = [])
+    {
+        $class = \get_called_class();
+
+        foreach ($attributes as $attribute) {
+            $this->attributes[] = new $class($this->pdo, $attribute);
+        }
+
+        return $this;
+    }
+
     public function setAttributes(array $attributes = [])
     {
         if ($attributes) {

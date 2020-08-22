@@ -32,8 +32,8 @@ class Template
     /**
      * @var array
      */
-   //public $var_ = [];
-    public $var_=array(''=>array());
+    //public $var_ = [];
+    public $var_ = ['' => []];
 
     /**
      * @var string
@@ -94,28 +94,25 @@ class Template
     /**
      * @param $key
      * @param $value
+     * @param mixed $arg
      */
     public function assign($arg)
     {
-        if (is_array($arg))
-        {
-            $var = array_merge($var=&$this->var_[$this->_current_scope], $arg);
-        }
-        else
-        {
-            $this->var_[$this->_current_scope][$arg] = func_get_arg(1);
+        if (\is_array($arg)) {
+            $var = \array_merge($var = &$this->var_[$this->_current_scope], $arg);
+        } else {
+            $this->var_[$this->_current_scope][$arg] = \func_get_arg(1);
         }
     }
 
-    public function setScope($scope='', $arg = [])
+    public function setScope($scope = '', $arg = [])
     {
         //$this->_current_scope=$scope;
 
         if (false === isset($this->var_[$scope])) {
-            $this->var_[$scope]=array();
+            $this->var_[$scope] = [];
         }
-        $var = array_merge($var=&$this->var_[$scope], $arg);
-
+        $var = \array_merge($var = &$this->var_[$scope], $arg);
     }
 
     /**
@@ -145,12 +142,13 @@ class Template
         if (true === $print) {
             $this->printContents($fid);
         } else {
-            if($this->debug) {
+            if ($this->debug) {
                 $this->printContents($fid);
+
                 return 'limepie template debugging...';
-            } else {
-                return $this->getContents($fid);
             }
+
+            return $this->getContents($fid);
         }
     }
 
@@ -179,6 +177,7 @@ class Template
     /**
      * @param  $fid
      * @param mixed $addAssign
+     * @param mixed $scope
      *
      * @return null
      */
@@ -188,8 +187,7 @@ class Template
             return;
         }
 
-        if (true === isset($this->var_[$fid]) )
-        {
+        if (true === isset($this->var_[$fid])) {
             $scope = $fid;
         }
 
@@ -354,7 +352,7 @@ class Template
         $cplHead = "<?php /* Peanut\Template " . \sha1_file($tplPath, false) . ' ' . \date('Y/m/d H:i:s', \filemtime($tplPath)) . ' ' . $tplPath . ' ';
 
         if ('dev' !== $this->compileCheck && false !== $cplPath) {
-            if(true === file_exists($cplPath)) {
+            if (true === \file_exists($cplPath)) {
                 $fp   = \fopen($cplPath, 'rb');
                 $head = \fread($fp, \strlen($cplHead) + 9);
                 \fclose($fp);
@@ -379,17 +377,16 @@ class Template
         return $cplPath2;
     }
 
-
     /**
      * @param $tplPath
      * @param mixed $addAssign
+     * @param mixed $TPL_SCP
      */
     private function requireFile($tplPath, $addAssign = [], $TPL_SCP)
     {
         \extract($this->var_['']);
 
         foreach ($this->var_[$TPL_SCP] as $k => $v) {
-
             if (true === \is_array($v)) {
                 foreach ($v as $k1 => $v2) {
                     ${$k}[$k1] = $v2;
@@ -399,7 +396,6 @@ class Template
             }
         }
         //unset ($k);  unset ($v);  unset ($V);
-
 
         //\extract($this->var_[$TPL_SCP]);
         \extract($addAssign);

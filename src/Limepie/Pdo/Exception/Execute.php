@@ -13,6 +13,7 @@ class Execute extends \Limepie\Exception
             $this->setFile($current['file']);
             $this->setLine($current['line']);
         }
+        $this->setDisplayMessage('잠시후 다시 시도해주세요.');
         $this->setMessage($e->getMessage() . ',' . \PHP_EOL . $query);
     }
 
