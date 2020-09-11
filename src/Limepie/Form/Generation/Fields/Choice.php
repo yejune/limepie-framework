@@ -60,7 +60,7 @@ class Choice extends \Limepie\Form\Generation\Fields
                 $checked = (string) $value === (string) $k1 ? 'checked' : '';
                 $active  = (string) $value === (string) $k1 ? 'active' : '';
                 $buttons .= <<<EOD
-                    <label class="btn btn-switch {$active} {$elementClass}">
+                    <label class="btn btn-switch btn-switch-radio {$active} {$elementClass}">
                     <input type="radio" name="{$key}" autocomplete="off" value="{$k1}" {$checked} ${onchange}> {$v1}
                     </label>
 

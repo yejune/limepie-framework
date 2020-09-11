@@ -30,7 +30,7 @@ class Multichoice extends \Limepie\Form\Generation\Fields
 
         if (true === isset($property['onchange'])) {
             $onchange = 'onchange="' . \trim(\addcslashes($property['onchange'], '"')) . '"';
-        }
+        } else {}
 
         $buttons = '';
         $scripts = '';
@@ -56,7 +56,7 @@ class Multichoice extends \Limepie\Form\Generation\Fields
                     $active  .= '';
                 }
                 $buttons .= <<<EOD
-<label class="btn btn-switch {$active}">
+<label class="btn btn-switch btn-swich-checkbox {$active}">
 <input type="checkbox" name="{$key}" autocomplete="off" value="{$k1}" {$checked} ${onchange}> {$v1}
 </label>
 

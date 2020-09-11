@@ -15,12 +15,29 @@ class Tui extends \Limepie\Form\Generation\Fields
         $rows    = $property['rows']    ?? 5;
 
         $fileserver = $property['fileserver'] ?? '';
-        $class = $property['class'] ?? '';
+        $class = $property['element_class'] ?? '';
         $linkcss = $property['linkcss'] ?? '';
         if($linkcss) {
             $linkcss = '<link rel="stylesheet" href="'.$linkcss.'"></link>';
         }
+        if(true === isset($property['preview']) && $property['preview']) {
+            $previewStyle = $property['preview'];
+        } else {
+            $previewStyle = 'vertical';
+        }
+        if(true === isset($property['edit']) && $property['edit']) {
+            $editStyle = $property['edit'];
+        } else {
+            $editStyle = 'wysiwyg';
+        }
         $id = uniqid();
+        $htmlid = 'html' . $id;
+
+        if(false === strpos($key, ']')) {
+            $htmlkey = $key.'_html';
+        } else {
+            $htmlkey = \preg_replace('#\]$#', '_html]', $key);
+        }
         $html = <<<EOT
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tui-editor/1.4.10/tui-editor.css"></link>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tui-editor/1.4.10/tui-editor-contents.css"></link>
@@ -29,7 +46,7 @@ class Tui extends \Limepie\Form\Generation\Fields
         {$linkcss}
         <script src="https://cdnjs.cloudflare.com/ajax/libs/tui-editor/1.4.10/tui-editor-Editor-full.js"></script>
         <textarea class="form-control d-none" id="textarea{$id}" name="{$key}">{$value}</textarea>
-        <textarea class="form-control d-none" id="textarea{$id}_html" name="{$key}_html"></textarea>
+        <textarea class="form-control d-none" id="textarea{$htmlid}" name="{$htmlkey}"></textarea>
 
         <div id="tui{$id}" class="form-control {$class}"  style="display:block; width: 100%"></div>
         <style>#tui{$id} .te-mode-switch-section {
@@ -41,32 +58,39 @@ $(function() {
 
     var editor = new tui.Editor({
         el: document.querySelector('#tui{$id}'),
-        previewStyle: 'vertical',
+        previewStyle: '{$previewStyle}',
         width: '100%',
         height: 'auto',
-        initialEditType: 'markdown',
+        initialEditType: '{$editStyle}',
         initialValue: $('#textarea{$id}').val(),
         events: {
             change: function() {
-                $('#textarea{$id}').val(editor.getMarkdown())
-                $('#textarea{$id}_html').val(editor.getHtml())
+                console.log('is mark', editor.isMarkdownMode());
+                if(editor.isMarkdownMode() == true) {
+                    $('#textarea{$id}').val(editor.getMarkdown());
+                } else {
+                    $('#textarea{$id}').val(editor.getHtml());
+                }
+                $('#textarea{$id}').change();
+                $('#textarea{$htmlid}').val(editor.getHtml());
             }
         },
         hooks: {
             'addImageBlobHook': function(blob, callback) {
                 var formData = new FormData();
                 formData.append('image', blob);
-
                 $.ajax({
                     url: "{$fileserver}",
                     enctype: 'multipart/form-data',
                     data: formData,
-                    processData: false,
+                    dataType : 'json',
                     contentType: false,
+                    processData: false,
                     cache: false,
                     type: 'POST',
                     success: function(response){
-                        callback(response.data.url, '');
+                        callback(response.url, '');
+                        return false;
                     },
                     error: function(e) {
                     }
