@@ -52,8 +52,8 @@ class Choice extends \Limepie\Form\Generation\Fields
 
         if (true === isset($property['items']) && true === \is_array($property['items'])) {
             foreach ($property['items'] as $k1 => $v1) {
-                if(true === is_array($v1)) {
-                    if(true === isset($v1[\Limepie\get_language()])) {
+                if (true === \is_array($v1)) {
+                    if (true === isset($v1[\Limepie\get_language()])) {
                         $v1 = $v1[\Limepie\get_language()];
                     }
                 }

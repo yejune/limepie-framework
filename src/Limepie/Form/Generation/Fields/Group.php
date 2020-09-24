@@ -12,7 +12,7 @@ class Group extends \Limepie\Form\Generation\Fields
 
         foreach ($specs['properties'] ?? [] as $propertyKey => $propertyValue) {
             if (false === isset($propertyValue['type'])) {
-                throw new \Exception('group ' . $key . ' ' . $propertyKey . ' error');
+                throw new \Exception('group "' . $key . '" "' . $propertyKey . '" type not found');
             }
             $method   = __NAMESPACE__ . '\\' . \ucfirst($propertyValue['type']);
             $elements = '';
@@ -49,7 +49,14 @@ class Group extends \Limepie\Form\Generation\Fields
                 $aData = $data[$fixPropertyKey] ?? '';
             }
 
-            $isMultiple = true === isset($propertyValue['multiple']) ? true : false;
+            $isMultiple = false;
+
+            if (true === isset($propertyValue['multiple'])) {
+                if (true === $propertyValue['multiple']) {
+                    $isMultiple = true;
+                }
+            }
+
             $isCollapse = true === isset($propertyValue['collapse']) ? true : false;
 
             if (true === static::isValue($aData)) {
@@ -421,8 +428,8 @@ EOD;
             }
             $style = '';
 
-            if (true === isset($specs['style'])) {
-                $style = "style='" . $specs['style'] . "'";
+            if (true === isset($specs['fieldset_style'])) {
+                $style = "style='" . $specs['fieldset_style'] . "'";
             }
 
             $html = <<<EOT

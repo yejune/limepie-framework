@@ -18,6 +18,12 @@ class Number extends \Limepie\Form\Generation\Fields
             $readonly = ' readonly="readonly"';
         }
 
+        $style = '';
+
+        if (isset($property['element_style']) && $property['element_style']) {
+            $style = ' style="' . $property['element_style'] . '"';
+        }
+
         $prepend = '';
 
         if (isset($property['prepend']) && $property['prepend']) {
@@ -46,7 +52,7 @@ EOD;
         $html = <<<EOT
         <div class="input-group">
         {$prepend}
-        <input type="number" class="form-control" name="{$key}" value="{$value}" data-default="{$default}"${readonly}${placeholder} />
+        <input type="number" class="form-control" name="{$key}" value="{$value}" data-default="{$default}"${readonly}${placeholder}{$style} />
         {$append}
         </div>
 EOT;
