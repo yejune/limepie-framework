@@ -188,7 +188,12 @@ class Model implements \Iterator, \ArrayAccess, \Countable
                     switch ($this->dataTypes[$field]) {
                         case 'serialize':
                             if ($value) {
-                                $value = \Limepie\unserialize($value);
+                                try {
+                                    $org   = $value;
+                                    $value = \Limepie\unserialize($value);
+                                } catch (\Exception $e) {
+                                    throw new \Exception($this->tableName . ' ' . $field . ' "...' . \mb_substr($org, -10, 10) . '" unserialize error');
+                                }
                             } else {
                                 $value = [];
                             }

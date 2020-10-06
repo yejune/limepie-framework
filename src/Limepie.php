@@ -16,13 +16,17 @@ function ___($domain, $string, $a, $b)
 }
 function cprint($content, $nl2br = false)
 {
-    $content = \strip_tags($content);
+    if ($content) {
+        $content = \strip_tags($content);
 
-    if ($nl2br) {
-        $content = \nl2br($content);
+        if ($nl2br) {
+            $content = \nl2br($content);
+        }
+
+        return $content;
     }
 
-    return $content;
+    return '';
 }
 
 function per1($point, $step)
@@ -55,10 +59,21 @@ function date($date)
 
     return $date;
 }
+function repairSerializeString($value)
+{
+    $regex = '/s:([0-9]+):"(.*?)"/';
 
+    return \preg_replace_callback(
+        $regex,
+        function($match) {
+            return 's:' . \mb_strlen($match[2]) . ':"' . $match[2] . '"';
+        },
+        $value
+    );
+}
 function unserialize($value)
 {
-    $org        = $value;
+    $org   = $value;
     $value = \preg_replace_callback(
         '/(?<=^|\{|;)s:(\d+):\"(.*?)\";(?=[asbdiO]\:\d|N;|\}|$)/s',
         function($m) {
@@ -67,10 +82,29 @@ function unserialize($value)
         $value
     );
 
+    // if ($org !== $value) {
+    //     \pr($org, $value);
+    // }
+    //$value = \utf8_encode($value);
+    //$value = \Limepie\repairSerializeString($value);
+    // echo '1';
+
+    // \var_dump($org);
+    // \var_dump($value);
+
     try {
         return \unserialize($value);
     } catch (\Exception $e) {
-        return \unserialize($org);
+        // \pr($org);
+        // \pr($value);
+
+        try {
+            return \unserialize($org);
+        } catch (\Exception $e) {
+            // \pr($org);
+
+            throw $e;
+        }
     }
 }
 

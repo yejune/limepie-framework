@@ -56,7 +56,7 @@ class Compiler
         $this->debug      = $tpl->debug;
 
         $this->filename        = $tplPath;
-        $this->basepath        = dirname($tplPath);
+        $this->basepath        = \dirname($tplPath);
         $this->tpl_path        = $tplPath;
         $this->prefilter       = $tpl->prefilter;
         $this->postfilter      = $tpl->postfilter;
@@ -285,8 +285,8 @@ class Compiler
                 case '#':
                     if (1 === \preg_match('`^#([\s+])?([a-zA-Z0-9\-_\.]+)$`', $statement)) {
                         $result = [2, $this->compileDefine($statement, $line)];
-                    } else if (1 === \preg_match('`^#([\s+])?([a-zA-Z0-9\-_\.]+) ([^ ]+)$`', $statement, $tmp)) {
-                        $result = [2, $this->compileInDefine('#'.$tmp[2], $this->basepath.'/'.$tmp[3], $line)];
+                    } elseif (1 === \preg_match('`^#([\s+])?([a-zA-Z0-9\-_\.]+) ([^ ]+)$`', $statement, $tmp)) {
+                        $result = [2, $this->compileInDefine('#' . $tmp[2], $this->basepath . '/' . $tmp[3], $line)];
                     } else {
                         $result = [1, $statement];
                     }
@@ -375,8 +375,9 @@ class Compiler
 
     public function compileInDefine($statement, $file, $line)
     {
-        return "self::define('".\trim(\substr($statement, 1))."', '".$file."');self::printContents('" . \trim(\substr($statement, 1)) . "')";
+        return "self::define('" . \trim(\substr($statement, 1)) . "', '" . $file . "');self::printContents('" . \trim(\substr($statement, 1)) . "')";
     }
+
     /**
      * @param $statement
      * @param $line
@@ -983,6 +984,13 @@ class Compiler
                     break;
                 case 'right_parenthesis':
                     $last_stat = \array_pop($stat);
+
+                    if (!$last_stat) {
+                        \pr($org);
+                        \pr($last_stat);
+
+                        exit;
+                    }
 
                     if ('left_parenthesis' !== $last_stat['name']) {
                         throw new Compiler\Exception(__LINE__ . ' parse error : file ' . $this->filename . ' line ' . $line . ' ' . $prev['org'] . $current['org']);
