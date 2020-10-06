@@ -4,6 +4,8 @@ namespace Limepie;
 
 class Request
 {
+    public $requestUri;
+
     public $rawBody;
 
     public $bodies = [];
@@ -43,11 +45,27 @@ class Request
 
     final public function __construct()
     {
+        $this->rawBody = \file_get_contents('php://input');
+        $this->bodies  = $this->getBodyAll();
+
+        $this->language = $this->getBestLanguage();
+
+        if (true === isset($this->locales[$this->language])) {
+            $this->locale = $this->locales[$this->language];
+        }
+
+        $this->requestUri = $this->getServer('REQUEST_URI');
+        $this->reload();
+    }
+
+    public function reload($requestUri = null)
+    {
+        if ($requestUri) {
+            $this->requestUri = $requestUri;
+        }
+        $this->uri      = $this->getRequestUri();
         $this->url      = $this->getUrl();
         $this->urlParts = \parse_url($this->url);
-        $this->rawBody  = \file_get_contents('php://input');
-        $this->bodies   = $this->getBodyAll();
-        $this->uri      = $this->getRequestUri();
 
         $tmp         = \explode('?', $this->uri, 2);
         $this->path  = $tmp[0] ?? '';
@@ -58,18 +76,6 @@ class Request
             for ($i = 0, $j = \count($this->segments); $i < $j; $i += 2) {
                 $this->parameters[$this->segments[$i]] = $this->segments[$i + 1] ?? '';
             }
-        }
-
-        $this->language = $this->getBestLanguage();
-
-        if (true === isset($this->locales[$this->language])) {
-            $this->locale = $this->locales[$this->language];
-        }
-
-        if (true === \method_exists($this, '__init')) {
-            $this->__init();
-        } elseif (true === \method_exists($this, '__init__')) {
-            $this->__init__();
         }
     }
 
@@ -145,11 +151,13 @@ class Request
 
     public function getRequestUri()
     {
-        if ($this->uri) {
-            return $this->uri;
-        }
-        $parts     = \explode('?', (string) $this->getServer('REQUEST_URI'), 2);
-        $this->uri = \trim($parts[0], '/');
+        // if ($this->uri) {
+        //     return $this->uri;
+        // }
+
+        $requestUri = $this->requestUri;
+        $parts      = \explode('?', (string) $requestUri, 2);
+        $this->uri  = \trim($parts[0], '/');
 
         if ($this->uri) {
             $this->uri = '/' . $this->uri;
@@ -967,7 +975,13 @@ class Request
                 $appScheme = '';
             }
         }
+
         return $appScheme;
+    }
+
+    public function getIp()
+    {
+        return \Limepie\getIp();
     }
 
     /**
@@ -1028,11 +1042,6 @@ class Request
         }
 
         return $returnedParts;
-    }
-
-    public function getIp()
-    {
-        return \Limepie\getIp();
     }
 }
 

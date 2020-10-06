@@ -8,10 +8,11 @@ class Group extends \Limepie\Form\Generation\Fields
     {
         $innerhtml = '';
         $script    = '';
-        $html = '';
+        $html      = '';
+
         foreach ($specs['properties'] ?? [] as $propertyKey => $propertyValue) {
             if (false === isset($propertyValue['type'])) {
-                \pr($propertyValue);
+                throw new \Exception('group "' . $key . '" "' . $propertyKey . '" type not found');
             }
             $method   = __NAMESPACE__ . '\\' . \ucfirst($propertyValue['type']);
             $elements = '';
@@ -44,11 +45,18 @@ class Group extends \Limepie\Form\Generation\Fields
 
             $aData = '';
 
-            if(true === is_array($data) && $fixPropertyKey) {
+            if (true === \is_array($data) && $fixPropertyKey) {
                 $aData = $data[$fixPropertyKey] ?? '';
             }
 
-            $isMultiple = true === isset($propertyValue['multiple']) ? true : false;
+            $isMultiple = false;
+
+            if (true === isset($propertyValue['multiple'])) {
+                if (true === $propertyValue['multiple']) {
+                    $isMultiple = true;
+                }
+            }
+
             $isCollapse = true === isset($propertyValue['collapse']) ? true : false;
 
             if (true === static::isValue($aData)) {
@@ -99,8 +107,8 @@ class Group extends \Limepie\Form\Generation\Fields
                         $parentId
                     );
                 } else {
-                    if(true === isset($propertyValue['default'])) {
-                        if(true === is_array($propertyValue['default'])) {
+                    if (true === isset($propertyValue['default'])) {
+                        if (true === \is_array($propertyValue['default'])) {
                             $aData = $propertyValue['default'];
                         } else {
                             $aData = [$propertyValue['default']];
@@ -145,8 +153,8 @@ class Group extends \Limepie\Form\Generation\Fields
                 }
             }
 
-
             $title = '';
+
             if (true === isset($propertyValue['label'])) {
                 if (true === \is_array($propertyValue['label'])) {
                     if (true === isset($propertyValue['label'][static::getLanguage()])) {
@@ -158,6 +166,7 @@ class Group extends \Limepie\Form\Generation\Fields
             }
 
             $description = '';
+
             if (true === isset($propertyValue['description'])) {
                 if (true === \is_array($propertyValue['description'])) {
                     if (true === isset($propertyValue['description'][static::getLanguage()])) {
@@ -167,7 +176,6 @@ class Group extends \Limepie\Form\Generation\Fields
                     $description = $propertyValue['description'];
                 }
             }
-
 
             $collapse = '';
 
@@ -356,7 +364,7 @@ class Group extends \Limepie\Form\Generation\Fields
                     $titleHtml .= $title;
                 } else {
                     $description = \preg_replace("#\*(.*)\n#", '<span class="bold">*$1</span>' . \PHP_EOL, $description);
-                    $titleHtml .= '<p class="description">' . nl2br($description) . '</p>';
+                    $titleHtml .= '<p class="description">' . \nl2br($description) . '</p>';
                 }
             }
 
@@ -372,7 +380,7 @@ EOT;
                 $d = '';
 
                 if ($description) {
-                    $d = '<p class="description">' . nl2br($description) . '</p>';
+                    $d = '<p class="description">' . \nl2br($description) . '</p>';
                 }
 
                 $innerhtml .= <<<EOT
@@ -418,9 +426,10 @@ EOD;
             if (true === isset($specs['fieldset_class'])) {
                 $fieldsetClass = ' ' . $specs['fieldset_class'];
             }
-            $style = "";
-            if(true === isset($specs['style'])) {
-                $style = "style='".$specs['style']."'";
+            $style = '';
+
+            if (true === isset($specs['fieldset_style'])) {
+                $style = "style='" . $specs['fieldset_style'] . "'";
             }
 
             $html = <<<EOT
@@ -505,7 +514,6 @@ EOT;
             $multipleHtml = true === isset($propertyValue['multiple']) ? static::getMultipleHtml($parentId) : '';
             $titleHtml    = '<label>' . $language . '</label>';
 
-
             if ('hidden' === $propertyValue['type']) {
                 $innerhtml .= <<<EOT
                     {$elements}
@@ -520,9 +528,10 @@ EOT;
             }
             unset($parentId);
         }
-        $style = "";
-        if(true === isset($propertyValue['style'])) {
-            $style = "style='".$propertyValue['style']."'";
+        $style = '';
+
+        if (true === isset($propertyValue['style'])) {
+            $style = "style='" . $propertyValue['style'] . "'";
         }
 
         $html = <<<EOT

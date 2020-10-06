@@ -1276,6 +1276,11 @@ function count($target)
     return \count($target);
 }
 
+function seqtoid($seq)
+{
+    return '-' . \str_pad((string) $seq, 11, '0', \STR_PAD_LEFT) . '-';
+}
+
 function seqtokey($seq)
 {
     return '__-' . \str_pad((string) $seq, 11, '0', \STR_PAD_LEFT) . '-__';
@@ -1289,6 +1294,15 @@ function seq2key($seq)
 function keytoseq($key)
 {
     if (1 === \preg_match('#^__-([0]+)?(?P<seq>\d+)-__$#', $key, $m)) {
+        return $m['seq'];
+    }
+
+    return null;
+}
+
+function idtoseq($key)
+{
+    if (1 === \preg_match('#^-([0]+)?(?P<seq>\d+)-$#', $key, $m)) {
         return $m['seq'];
     }
 

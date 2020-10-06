@@ -12,6 +12,8 @@ class Model implements \Iterator, \ArrayAccess, \Countable
 
     public $aliasTableName;
 
+    public $tableAliasName;
+
     public $primaryKeyName;
 
     public $sequenceName;
@@ -509,28 +511,28 @@ class Model implements \Iterator, \ArrayAccess, \Countable
                         $_conditions[]               = ":{$key}{$index2}";
                         $binds[':' . $key . $index2] = $value2;
                     }
-                    $conds[] = "`{$this->tableName}`.`{$key}` IN (" . \implode(', ', $_conditions) . ')';
+                    $conds[] = "`{$this->tableAliasName}`.`{$key}` IN (" . \implode(', ', $_conditions) . ')';
                 } else {
                     $key2 = \substr($key, 3);
 
                     if (0 === \strpos($key, 'gt_')) {
-                        $conds[] = "`{$this->tableName}`." . '`' . $key2 . '`' . ' > :' . $key;
+                        $conds[] = "`{$this->tableAliasName}`." . '`' . $key2 . '`' . ' > :' . $key;
                     } elseif (0 === \strpos($key, 'lt_')) {
-                        $conds[] = "`{$this->tableName}`." . '`' . $key2 . '`' . ' < :' . $key;
+                        $conds[] = "`{$this->tableAliasName}`." . '`' . $key2 . '`' . ' < :' . $key;
                     } elseif (0 === \strpos($key, 'ge_')) {
-                        $conds[] = "`{$this->tableName}`." . '`' . $key2 . '`' . ' >= :' . $key;
+                        $conds[] = "`{$this->tableAliasName}`." . '`' . $key2 . '`' . ' >= :' . $key;
                     } elseif (0 === \strpos($key, 'le_')) {
-                        $conds[] = "`{$this->tableName}`." . '`' . $key2 . '`' . ' <= :' . $key;
+                        $conds[] = "`{$this->tableAliasName}`." . '`' . $key2 . '`' . ' <= :' . $key;
                     } elseif (0 === \strpos($key, 'eq_')) {
-                        $conds[] = "`{$this->tableName}`." . '`' . $key2 . '`' . ' = :' . $key;
+                        $conds[] = "`{$this->tableAliasName}`." . '`' . $key2 . '`' . ' = :' . $key;
                     } elseif (0 === \strpos($key, 'ne_')) {
                         if (null === $arguments[$index]) {
-                            $conds[] = "`{$this->tableName}`." . '`' . $key2 . '`' . ' IS NOT NULL';
+                            $conds[] = "`{$this->tableAliasName}`." . '`' . $key2 . '`' . ' IS NOT NULL';
                         } else {
-                            $conds[] = "`{$this->tableName}`." . '`' . $key2 . '`' . ' != :' . $key;
+                            $conds[] = "`{$this->tableAliasName}`." . '`' . $key2 . '`' . ' != :' . $key;
                         }
                     } elseif (0 === \strpos($key, 'lk_')) {
-                        $conds[] = "`{$this->tableName}`." . '`' . $key2 . '`' . ' like concat("%", :' . $key . ', "%")';
+                        $conds[] = "`{$this->tableAliasName}`." . '`' . $key2 . '`' . ' like concat("%", :' . $key . ', "%")';
                     } else {
                         // $this->bindcount++;
 
@@ -541,9 +543,9 @@ class Model implements \Iterator, \ArrayAccess, \Countable
                         //     ]
                         // ];
                         if (null === $arguments[$index]) {
-                            $conds[] = "`{$this->tableName}`." . '`' . $key . '` IS NULL';
+                            $conds[] = "`{$this->tableAliasName}`." . '`' . $key . '` IS NULL';
                         } else {
-                            $conds[] = "`{$this->tableName}`." . '`' . $key . '`' . ' = :' . $key;
+                            $conds[] = "`{$this->tableAliasName}`." . '`' . $key . '`' . ' = :' . $key;
                         }
                     }
 
@@ -567,33 +569,33 @@ class Model implements \Iterator, \ArrayAccess, \Countable
                     $conditions[]                    = ":{$whereKey}{$index}";
                     $binds[':' . $whereKey . $index] = $value;
                 }
-                $condition = "`{$this->tableName}`.`{$whereKey}` IN (" . \implode(', ', $conditions) . ')';
+                $condition = "`{$this->tableAliasName}`.`{$whereKey}` IN (" . \implode(', ', $conditions) . ')';
             } else {
                 $whereKey2 = \substr($whereKey, 3);
 
                 if (0 === \strpos($whereKey, 'gt_')) {
-                    $condition = "`{$this->tableName}`.`{$whereKey2}` > :{$whereKey}";
+                    $condition = "`{$this->tableAliasName}`.`{$whereKey2}` > :{$whereKey}";
                 } elseif (0 === \strpos($whereKey, 'lt_')) {
-                    $condition = "`{$this->tableName}`.`{$whereKey2}` < :{$whereKey}";
+                    $condition = "`{$this->tableAliasName}`.`{$whereKey2}` < :{$whereKey}";
                 } elseif (0 === \strpos($whereKey, 'ge_')) {
-                    $condition = "`{$this->tableName}`.`{$whereKey2}` >= :{$whereKey}";
+                    $condition = "`{$this->tableAliasName}`.`{$whereKey2}` >= :{$whereKey}";
                 } elseif (0 === \strpos($whereKey, 'le_')) {
-                    $condition = "`{$this->tableName}`.`{$whereKey2}` <= :{$whereKey}";
+                    $condition = "`{$this->tableAliasName}`.`{$whereKey2}` <= :{$whereKey}";
                 } elseif (0 === \strpos($whereKey, 'eq_')) {
-                    $condition = "`{$this->tableName}`.`{$whereKey2}` = :{$whereKey}";
+                    $condition = "`{$this->tableAliasName}`.`{$whereKey2}` = :{$whereKey}";
                 } elseif (0 === \strpos($whereKey, 'ne_')) {
                     if (null === $whereValue) {
-                        $condition = "`{$this->tableName}`.`{$whereKey2}` IS NOT NULL";
+                        $condition = "`{$this->tableAliasName}`.`{$whereKey2}` IS NOT NULL";
                     } else {
-                        $condition = "`{$this->tableName}`.`{$whereKey2}` != :{$whereKey}";
+                        $condition = "`{$this->tableAliasName}`.`{$whereKey2}` != :{$whereKey}";
                     }
                 } elseif (0 === \strpos($whereKey, 'lk_')) {
-                    $condition = "`{$this->tableName}`.`{$whereKey2}` like concat('%',:{$whereKey},'%')";
+                    $condition = "`{$this->tableAliasName}`.`{$whereKey2}` like concat('%',:{$whereKey},'%')";
                 } else {
                     if (null === $whereValue) {
-                        $condition = "`{$this->tableName}`.`{$whereKey}` IS NULL";
+                        $condition = "`{$this->tableAliasName}`.`{$whereKey}` IS NULL";
                     } else {
-                        $condition = "`{$this->tableName}`.`{$whereKey}` = :{$whereKey}";
+                        $condition = "`{$this->tableAliasName}`.`{$whereKey}` = :{$whereKey}";
                     }
                 }
 
@@ -1098,9 +1100,9 @@ class Model implements \Iterator, \ArrayAccess, \Countable
         foreach ($this->selectFields as $column => $alias) {
             if (true === \is_numeric($column)) {
                 if ('ip' === $alias) {
-                    $fields[] = "inet6_ntoa(`{$this->tableName}`." . '`' . $alias . '`) `' . $alias . '`';
+                    $fields[] = "inet6_ntoa(`{$this->tableAliasName}`." . '`' . $alias . '`) `' . $alias . '`';
                 } else {
-                    $fields[] = "`{$this->tableName}`." . '`' . $alias . '`';
+                    $fields[] = "`{$this->tableAliasName}`." . '`' . $alias . '`';
                 }
             } else {
                 $fields[] = $column . ' AS `' . $alias . '`';
@@ -1193,7 +1195,7 @@ class Model implements \Iterator, \ArrayAccess, \Countable
             SELECT
                 COUNT(*)
             FROM
-                `{$this->tableName}`
+                `{$this->tableName}` AS `{$this->tableAliasName}`
             {$condition}
         SQL;
 
@@ -1264,7 +1266,7 @@ class Model implements \Iterator, \ArrayAccess, \Countable
             SELECT
                 {$selectFields}
             FROM
-                `{$this->tableName}`
+                `{$this->tableName}` AS `{$this->tableAliasName}`
             {$join}
             {$condition}
             {$orderBy}
@@ -1315,11 +1317,12 @@ class Model implements \Iterator, \ArrayAccess, \Countable
                 $binds     = $this->binds;
             }
         }
+
         $sql = <<<SQL
             SELECT
                 {$selectFields}
             FROM
-                `{$this->tableName}`
+                `{$this->tableName}` AS `{$this->tableAliasName}`
             {$condition}
             {$orderBy}
             LIMIT 1
@@ -1574,7 +1577,7 @@ class Model implements \Iterator, \ArrayAccess, \Countable
             SELECT
                 {$selectFields}
             FROM
-                `{$this->tableName}`
+                `{$this->tableName}` AS `{$this->tableAliasName}`
             {$condition}
             {$orderBy}
             {$limit}
@@ -1646,7 +1649,7 @@ class Model implements \Iterator, \ArrayAccess, \Countable
             SELECT
                 {$selectFields}
             FROM
-                `{$this->tableName}`
+                `{$this->tableName}` AS `{$this->tableAliasName}`
             {$join}
             {$condition}
             {$orderBy}
@@ -1694,7 +1697,7 @@ class Model implements \Iterator, \ArrayAccess, \Countable
             $fieldName = \Limepie\decamelize(\substr($name, 3));
         }
 
-        if (!$fieldName) {
+        if (!$name) {
             throw new \Limepie\Exception('get ' . $this->tableName . ' "' . $fieldName . '" field not found', 999);
         }
 
@@ -1718,6 +1721,7 @@ class Model implements \Iterator, \ArrayAccess, \Countable
                 //         $msg =
                 //     }
                 // }
+
                 throw new \Limepie\Exception('get ' . $this->tableName . ' "' . $fieldName . '" field not found', 1999);
             }
         }

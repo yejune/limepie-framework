@@ -16,6 +16,7 @@ class Multichoice extends \Limepie\Form\Generation\Fields
             $value = [(string) $property['default']];
         }
         $actives = $property['active'] ?? [];
+
         if (true === isset($property['label'])) {
             if (true === isset($property['label'][static::getLanguage()])) {
                 $title = $property['label'][static::getLanguage()];
@@ -37,26 +38,28 @@ class Multichoice extends \Limepie\Form\Generation\Fields
 
         if (true === isset($property['items']) && true === \is_array($property['items'])) {
             foreach ($property['items'] as $k1 => $v1) {
-                if(true === is_array($v1)) {
-                    if(true === isset($v1[\Limepie\get_language()])) {
+                if (true === \is_array($v1)) {
+                    if (true === isset($v1[\Limepie\get_language()])) {
                         $v1 = $v1[\Limepie\get_language()];
                     }
                 }
 
                 $active = '';
+
                 if (true === \in_array($k1, $actives, false)) {
                     $checked = 'checked';
-                    $active  .= 'dactive ';
+                    $active .= 'dactive ';
                 }
+
                 if (true === \in_array($k1, $value, false)) {
                     $checked = 'checked';
-                    $active  .= 'active';
+                    $active .= 'active';
                 } else {
                     $checked = '';
-                    $active  .= '';
+                    $active .= '';
                 }
                 $buttons .= <<<EOD
-<label class="btn btn-switch {$active}">
+<label class="btn btn-switch btn-swich-checkbox {$active}">
 <input type="checkbox" name="{$key}" autocomplete="off" value="{$k1}" {$checked} ${onchange}> {$v1}
 </label>
 

@@ -2,7 +2,7 @@
 
 namespace Limepie\Form\Generation\Fields;
 
-class Text extends \Limepie\Form\Generation\Fields
+class Description extends \Limepie\Form\Generation\Fields
 {
     public static function write($key, $property, $value)
     {
@@ -67,7 +67,7 @@ EOD;
         $html = <<<EOT
         <div class="input-group">
         {$prepend}
-        <input type="text" class="form-control{$elementClass}" name="{$key}" value="{$value}" data-default="{$default}"${readonly}${disabled}{$placeholder}{$style} />
+        <input type="hidden" class="form-control{$elementClass}" name="{$key}" value="{$value}" data-default="{$default}"${readonly}${disabled}{$placeholder}{$style} />
         {$append}
         </div>
 EOT;

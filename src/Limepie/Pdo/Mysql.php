@@ -363,7 +363,7 @@ class Mysql extends \Pdo
      *
      * @return mixed
      */
-    public function transaction(callable $callback)
+    public function transaction(\Closure $callback)
     {
         try {
             if ($this->begin()) {
