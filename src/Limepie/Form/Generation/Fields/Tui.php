@@ -100,6 +100,8 @@ $(function() {
         },
         exts: ['scrollSync']
       });
+      $('#textarea{$htmlid}').val(editor.getHtml());
+
 });
 </script>
 EOT;
