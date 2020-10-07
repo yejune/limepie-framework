@@ -6,11 +6,10 @@ class Tui extends \Limepie\Form\Generation\Fields
 {
     public static function write($key, $property, $value)
     {
-        $value = (string) $value;
-        $id    = \uniqid();
+        $value = \htmlspecialchars((string) $value);
 
         if (0 === \strlen($value) && true === isset($property['default'])) {
-            $value = (string) $property['default'];
+            $value = \htmlspecialchars((string) $property['default']);
         }
         $default = $property['default'] ?? '';
         $rows    = $property['rows']    ?? 5;
@@ -34,48 +33,47 @@ class Tui extends \Limepie\Form\Generation\Fields
         } else {
             $editStyle = 'wysiwyg';
         }
+        $id     = \uniqid();
+        $htmlid = 'html' . $id;
 
+        if (false === \strpos($key, ']')) {
+            $htmlkey = $key . '_html';
+        } else {
+            $htmlkey = \preg_replace('#\]$#', '_html]', $key);
+        }
         $html = <<<EOT
-        <link rel="stylesheet" href="https://uicdn.toast.com/tui-editor/latest/tui-editor.css"></link>
-        <link rel="stylesheet" href="https://uicdn.toast.com/tui-editor/latest/tui-editor-contents.css"></link>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tui-editor/1.4.10/tui-editor.css"></link>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tui-editor/1.4.10/tui-editor-contents.css"></link>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.48.4/codemirror.css"></link>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css"></link>
-        <script src="https://uicdn.toast.com/tui-editor/latest/tui-editor-Editor-full.js"></script>
-
         {$linkcss}
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/tui-editor/1.4.10/tui-editor-Editor-full.js"></script>
         <textarea class="form-control d-none" id="textarea{$id}" name="{$key}">{$value}</textarea>
-
-        <div id="tui{$id}" class="form-control {$class}"  style="display:block; width: 100%;">{$value}</div>
-        <style>
-        #tui{$id} .te-mode-switch-section {
-        //  display: none !important;
-        //  height: 0;
-        }
-        #tui{$id} .tui-editor-contents h1 {
-            margin: 15px 0 15px 0;
-        }
-
-        #tui{$id} .tui-editor-defaultUI-toolbar {
-            padding: 0 5px;
-        }
-
-        #tui{$id} .te-md-container .te-preview {
-            padding: 0 5px;
-        }
-        </style>
+        <textarea class="form-control d-none" id="textarea{$htmlid}" name="{$htmlkey}"></textarea>
+        <div id="tui{$id}" class="form-control {$class}"  style="display:block; width: 100%"></div>
+        <style>#tui{$id} .te-mode-switch-section {
+         display: none !important;
+         height: 0;
+        }</style>
 <script>
 $(function() {
-
     var editor = new tui.Editor({
         el: document.querySelector('#tui{$id}'),
         previewStyle: '{$previewStyle}',
         width: '100%',
         height: 'auto',
         initialEditType: '{$editStyle}',
+        initialValue: $('#textarea{$id}').val(),
         events: {
             change: function() {
-                $('#textarea{$id}').val(editor.getHtml());
+                console.log('is mark', editor.isMarkdownMode());
+                if(editor.isMarkdownMode() == true) {
+                    $('#textarea{$id}').val(editor.getMarkdown());
+                } else {
+                    $('#textarea{$id}').val(editor.getHtml());
+                }
                 $('#textarea{$id}').change();
+                $('#textarea{$htmlid}').val(editor.getHtml());
             }
         },
         hooks: {
@@ -102,9 +100,7 @@ $(function() {
         },
         exts: ['scrollSync']
       });
-
 });
-
 </script>
 EOT;
 
@@ -116,7 +112,6 @@ EOT;
         $value = \nl2br((string) $value);
         $html  = <<<EOT
         {$value}
-
 EOT;
 
         return $html;
