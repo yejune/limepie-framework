@@ -107,12 +107,7 @@ class Template
 
     public function setScope($scope = '', $arg = [])
     {
-        //$this->_current_scope=$scope;
-
-        if (false === isset($this->var_[$scope])) {
-            $this->var_[$scope] = [];
-        }
-        $var = \array_merge($var = &$this->var_[$scope], $arg);
+        $this->var_[$scope] = $arg;
     }
 
     /**
@@ -386,18 +381,19 @@ class Template
     {
         \extract($this->var_['']);
 
-        foreach ($this->var_[$TPL_SCP] as $k => $v) {
-            if (true === \is_array($v)) {
-                foreach ($v as $k1 => $v2) {
-                    ${$k}[$k1] = $v2;
-                }
-            } else {
-                ${$k} = $v;
-            }
-        }
+        // foreach ($this->var_[$TPL_SCP] as $k => $v) {
+        //     if (true === \is_array($v)) {
+        //         foreach ($v as $k1 => $v2) {
+        //             ${$k}[$k1] = $v2;
+        //         }
+        //     } else {
+        //         ${$k} = $v;
+        //     }
+        // }
         //unset ($k);  unset ($v);  unset ($V);
-
-        //\extract($this->var_[$TPL_SCP]);
+        if (true === isset($this->var_[$TPL_SCP])) {
+            ${$TPL_SCP} = $this->var_[$TPL_SCP];
+        }
         \extract($addAssign);
 
         if (true === \file_exists($tplPath)) {

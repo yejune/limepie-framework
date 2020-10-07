@@ -285,8 +285,8 @@ class Compiler
                 case '#':
                     if (1 === \preg_match('`^#([\s+])?([a-zA-Z0-9\-_\.]+)$`', $statement)) {
                         $result = [2, $this->compileDefine($statement, $line)];
-                    } elseif (1 === \preg_match('`^#([\s+])?([a-zA-Z0-9\-_\.]+) ([^ ]+)$`', $statement, $tmp)) {
-                        $result = [2, $this->compileInDefine('#' . $tmp[2], $this->basepath . '/' . $tmp[3], $line)];
+                    } elseif (1 === \preg_match('`^#([\s+])?([a-zA-Z0-9\-_\.]+) ([^ ]+)( ([^ ]+))?$`', $statement, $tmp)) {
+                        $result = [2, $this->compileInDefine('#' . $tmp[2], $this->basepath . '/' . $tmp[3], $tmp[5] ?? '', $line)];
                     } else {
                         $result = [1, $statement];
                     }
@@ -373,8 +373,12 @@ class Compiler
         return $result;
     }
 
-    public function compileInDefine($statement, $file, $line)
+    public function compileInDefine($statement, $file, $scope = '', $line)
     {
+        if ($scope) {
+            return 'self::setScope("' . $scope . '", $' . $scope . ');' . "self::define('" . \trim(\substr($statement, 1)) . "', '" . $file . "');self::printContents('" . \trim(\substr($statement, 1)) . "', [], '" . $scope . "')";
+        }
+
         return "self::define('" . \trim(\substr($statement, 1)) . "', '" . $file . "');self::printContents('" . \trim(\substr($statement, 1)) . "')";
     }
 
